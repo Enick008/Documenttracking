@@ -367,12 +367,12 @@
 
 
         // Event listeners for tab switching
-        document.getElementById('tab-receive').addEventListener('click', () => switchTab('receive'));
-        document.getElementById('tab-send').addEventListener('click', () => switchTab('send'));
-        document.getElementById('tab-statistics').addEventListener('click', () => switchTab('statistics'));
+document.getElementById('tab-receive').addEventListener('click', () => openTab(event, 'receive'));
+document.getElementById('tab-send').addEventListener('click', () => openTab(event, 'send'));
+document.getElementById('tab-statistics').addEventListener('click', () => openTab(event, 'statistics'));
 
-        // Initial tab setup
-        switchTab('receive');
+// Initial tab setup
+openTab(null, 'receive');
 
         // Function to handle form submission (add/edit data)
         async function handleSubmit(event, formType) {
