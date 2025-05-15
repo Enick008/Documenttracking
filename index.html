@@ -346,7 +346,93 @@
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGs5cVEgNWbAcbG5O61SKaNhe22uAlaBJVSEaXZDF33h_ngggQcomaVGL5lhMSHfF2WQ/exec'; // Replace with your Google Apps Script URL
         const SHEET_ID = '1uOo_wsWfA7cO3initNwUaoseXtNLuDEmDQ2O5A5v1S8'; // Replace with your Google Sheet ID
         const FOLDER_ID = '1Miz44jDIMrl1ZGmSEt23TXNu7rzK-1w1'; // Replace with your Google Drive Folder ID
+function openTab(evt, tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    evt.currentTarget.classList.add('active');
+  }
 
+  document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const file = form.fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = async function() {
+      const base64 = reader.result.split(',')[1];
+      const rowData = {
+        'ทะเบียนรับเทศบาล': form.fileName.value,
+        'ฝ่าย': form.department.value,
+        'หมายเหตุ': form.note.value,
+        'วันที่รับ': new Date().toLocaleDateString(),
+        'ผู้บันทึกข้อมูล': 'auto' // เพิ่มฟิลด์เสริมถ้าต้องการ
+      };
+
+      const uploadData = {
+        fileName: file.name,
+        sheetName: 'receive',
+        rowData
+      };
+
+      const res = await fetch(scriptUrl + '?action=uploadFiles', {
+        method: 'POST',
+        body: new URLSearchParams({
+          data: JSON.stringify(uploadData)
+        })
+      });
+
+      const result = await res.json();
+      document.getElementById('uploadStatus').textContent = result.success
+        ? 'อัปโหลดสำเร็จ'
+        : 'ผิดพลาด: ' + result.message;
+      if (result.success) loadFileList();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  async function loadFileList() {
+    const res = await fetch(`${scriptUrl}?callback=cb&data=${encodeURIComponent(JSON.stringify({ action: 'getData', sheetName: 'receive' }))}`);
+    const text = await res.text();
+    const json = text.match(/^cb\((.*)\)$/);
+    const data = JSON.parse(json[1]);
+
+    const listEl = document.getElementById('fileList');
+    listEl.innerHTML = '';
+    data.data.forEach(doc => {
+      const row = `<tr>
+        <td>${doc['ทะเบียนรับเทศบาล'] || ''}</td>
+        <td>${doc['ฝ่าย'] || ''}</td>
+        <td><span class="note">${doc['หมายเหตุ'] || ''}</span></td>
+        <td><a href="${doc['receive-file'] || '#'}" target="_blank">เปิด</a></td>
+        <td>
+          <button onclick="deleteFile('${doc.id}')">ลบ</button>
+          <button onclick="editNote('${doc.id}', this)">แก้ไข</button>
+        </td>
+      </tr>`;
+      listEl.insertAdjacentHTML('beforeend', row);
+    });
+  }
+
+  async function deleteFile(id) {
+    if (!confirm(`ยืนยันการลบข้อมูล ID ${id}?`)) return;
+    const res = await fetch(scriptUrl + `?callback=cb&data=${encodeURIComponent(JSON.stringify({ action: 'deleteData', sheetName: 'receive', id }))}`);
+    loadFileList();
+  }
+
+  async function editNote(id, btn) {
+    const oldNote = btn.closest('tr').querySelector('.note').innerText;
+    const newNote = prompt('แก้ไขหมายเหตุ:', oldNote);
+    if (newNote === null) return;
+
+    const res = await fetch(scriptUrl + `?callback=cb&data=${encodeURIComponent(JSON.stringify({
+      action: 'editData',
+      sheetName: 'receive',
+      data: { id, 'หมายเหตุ': newNote }
+    }))}`);
+    loadFileList();
+  }
+
+  window.onload = loadFileList;
         // Function to set active tab and display corresponding section
         function switchTab(tabId) {
             tabs.forEach(tab => tab.classList.remove('tab-active'));
