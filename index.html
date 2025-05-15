@@ -313,470 +313,386 @@
     <footer class="bg-gray-200 text-gray-700 py-4 text-center mt-8">
         © 2025 ระบบบริหารจัดการงานกองช่างสุขาภิบาล โดย นายธีรศักดิ์ พูลเขาล้าน
     </footer>
+<script>
+    // --- ฟังก์ชัน JSONP สำหรับเรียก Google Apps Script ---
+    function sendJsonp(requestData, callback) {
+        const callbackName = 'cb_' + Math.random().toString(36).substring(2, 15);
+        window[callbackName] = function(response) {
+            callback(response);
+            delete window[callbackName];
+            script.remove();
+        };
+        const script = document.createElement('script');
+        script.src = SCRIPT_URL + '?callback=' + callbackName + '&data=' + encodeURIComponent(JSON.stringify(requestData));
+        document.body.appendChild(script);
+    }
 
-    <script>
-        const tabs = document.querySelectorAll('.tab');
-        const sections = document.querySelectorAll('.section');
-        const receiveForm = document.getElementById('receive-form');
-        const sendForm = document.getElementById('send-form');
-        const receiveTable = document.getElementById('receive-table');
-        const sendTable = document.getElementById('send-table');
-        const receiveStatusMessage = document.getElementById('receive-status-message');
-        const sendStatusMessage = document.getElementById('send-status-message');
-        const receiveSearchInput = document.getElementById('receive-search');
-        const sendSearchInput = document.getElementById('send-search');
-        const receiveFilterStatus = document.getElementById('receive-filter-status');
-        const sendFilterStatus = document.getElementById('send-filter-status');
+    const tabs = document.querySelectorAll('.tab');
+    const sections = document.querySelectorAll('.section');
+    const receiveForm = document.getElementById('receive-form');
+    const sendForm = document.getElementById('send-form');
+    const receiveTable = document.getElementById('receive-table');
+    const sendTable = document.getElementById('send-table');
+    const receiveStatusMessage = document.getElementById('receive-status-message');
+    const sendStatusMessage = document.getElementById('send-status-message');
+    const receiveSearchInput = document.getElementById('receive-search');
+    const sendSearchInput = document.getElementById('send-search');
+    const receiveFilterStatus = document.getElementById('receive-filter-status');
+    const sendFilterStatus = document.getElementById('send-filter-status');
 
-        // Get Statistics Elements
-        const receiveTotalElement = document.getElementById('receive-total');
-        const receivePendingElement = document.getElementById('receive-pending');
-        const receiveCompletedElement = document.getElementById('receive-completed');
-        const sendTotalElement = document.getElementById('send-total');
-        const sendPendingElement = document.getElementById('send-pending');
-        const sendCompletedElement = document.getElementById('send-completed');
-        const tabStatistics = document.getElementById('tab-statistics'); // Get the tab
-        const sectionStatistics = document.getElementById('section-statistics'); // Get the section
+    // Get Statistics Elements
+    const receiveTotalElement = document.getElementById('receive-total');
+    const receivePendingElement = document.getElementById('receive-pending');
+    const receiveCompletedElement = document.getElementById('receive-completed');
+    const sendTotalElement = document.getElementById('send-total');
+    const sendPendingElement = document.getElementById('send-pending');
+    const sendCompletedElement = document.getElementById('send-completed');
+    const tabStatistics = document.getElementById('tab-statistics');
+    const sectionStatistics = document.getElementById('section-statistics');
 
-        let receiveData = [];
-        let sendData = [];
-        let editingId = null;
-        let currentTab = 'receive'; // Keep track of the current tab
+    let receiveData = [];
+    let sendData = [];
+    let editingId = null;
+    let currentTab = 'receive';
 
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGs5cVEgNWbAcbG5O61SKaNhe22uAlaBJVSEaXZDF33h_ngggQcomaVGL5lhMSHfF2WQ/exec'; // Replace with your Google Apps Script URL
-        const SHEET_ID = '1uOo_wsWfA7cO3initNwUaoseXtNLuDEmDQ2O5A5v1S8'; // Replace with your Google Sheet ID
-        const FOLDER_ID = '1Miz44jDIMrl1ZGmSEt23TXNu7rzK-1w1'; // Replace with your Google Drive Folder ID
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGs5cVEgNWbAcbG5O61SKaNhe22uAlaBJVSEaXZDF33h_ngggQcomaVGL5lhMSHfF2WQ/exec';
 
-        function openTab(evt, tabId) {
-            document.querySelectorAll('.tab-active').forEach(el => el.classList.remove('tab-active'));
-            sections.forEach(section => section.classList.add('hidden'));
+    function openTab(evt, tabId) {
+        document.querySelectorAll('.tab-active').forEach(el => el.classList.remove('tab-active'));
+        sections.forEach(section => section.classList.add('hidden'));
 
-            const activeTab = document.getElementById(`tab-${tabId}`);
-            const activeSection = document.getElementById(`section-${tabId}`);
+        const activeTab = document.getElementById(`tab-${tabId}`);
+        const activeSection = document.getElementById(`section-${tabId}`);
 
-            activeTab.classList.add('tab-active');
-            activeSection.classList.remove('hidden');
-            currentTab = tabId; // Update currentTab
-             if (tabId === 'statistics') {
-                updateStatistics();
+        activeTab.classList.add('tab-active');
+        activeSection.classList.remove('hidden');
+        currentTab = tabId;
+        if (tabId === 'statistics') {
+            updateStatistics();
+        } else {
+            loadExistingData(tabId);
+        }
+    }
+
+    // Event listeners for tab switching
+    document.getElementById('tab-receive').addEventListener('click', () => openTab(event, 'receive'));
+    document.getElementById('tab-send').addEventListener('click', () => openTab(event, 'send'));
+    document.getElementById('tab-statistics').addEventListener('click', () => openTab(event, 'statistics'));
+
+    // Initial tab setup
+    openTab(null, 'receive');
+
+    // Function to handle form submission (add/edit data)
+    function handleSubmit(event, formType) {
+        event.preventDefault();
+
+        const statusMessageElement = formType === 'receive' ? receiveStatusMessage : sendStatusMessage;
+        statusMessageElement.textContent = 'กำลังบันทึกข้อมูล...';
+
+        const formData = new FormData(event.target);
+        const data = {};
+        formData.forEach((value, key) => {
+            if (key === 'receive-file' || key === 'send-file') {
+                const file = formData.get(key);
+                data[key] = file && file.size > 0 ? file.name : '';
             } else {
-                loadExistingData(tabId); // Load data when switching tabs
+                data[key] = value;
             }
+        });
+
+        if (editingId) {
+            data.id = editingId;
+        } else {
+            data.id = Date.now();
         }
 
+        const sheetName = formType === 'receive' ? 'receive' : 'send';
+        const requestData = {
+            action: editingId ? 'editData' : 'addData',
+            sheetName: sheetName,
+            data: data,
+        };
 
+        sendJsonp(requestData, (result) => {
+            handleResponse(result, formType);
+            editingId = null;
+        });
+    }
 
-        // Event listeners for tab switching
-document.getElementById('tab-receive').addEventListener('click', () => openTab(event, 'receive'));
-document.getElementById('tab-send').addEventListener('click', () => openTab(event, 'send'));
-document.getElementById('tab-statistics').addEventListener('click', () => openTab(event, 'statistics'));
+    // Attach event listeners to the forms
+    receiveForm.addEventListener('submit', (event) => handleSubmit(event, 'receive'));
+    sendForm.addEventListener('submit', (event) => handleSubmit(event, 'send'));
 
-// Initial tab setup
-openTab(null, 'receive');
+    // Callback function to handle the response from Google Apps Script
+    function handleResponse(response, formType) {
+        const statusMessageElement = formType === 'receive' ? receiveStatusMessage : sendStatusMessage;
 
-        // Function to handle form submission (add/edit data)
-        async function handleSubmit(event, formType) {
-            event.preventDefault();
-
-            const statusMessageElement = formType === 'receive' ? receiveStatusMessage : sendStatusMessage;
-            statusMessageElement.textContent = 'กำลังบันทึกข้อมูล...';
-
-            const formData = new FormData(event.target);
-            const data = {};
-            formData.forEach((value, key) => {
-                if (key === 'receive-file' || key === 'send-file') {
-                    // Handle file upload separately
-                    const file = formData.get(key);
-                    if (file.size > 0) {
-                        // In a real scenario, you would upload the file to Google Drive
-                        // and get the URL.  For this example, we'll just store the filename.
-                        data[key] = file.name;  // Store the filename
-                    } else {
-                        data[key] = ''; // No file uploaded
-                    }
-                } else {
-                    data[key] = value;
-                }
-            });
-
-            if (editingId) {
-                data.id = editingId;
+        if (response.success) {
+            statusMessageElement.textContent = 'บันทึกข้อมูลสำเร็จ';
+            if (formType === 'receive') {
+                receiveForm.reset();
+                loadExistingData('receive');
             } else {
-                data.id = Date.now();
+                sendForm.reset();
+                loadExistingData('send');
             }
-
-            // Determine the sheet name based on the form type
-            const sheetName = formType === 'receive' ? 'receive' : 'send';
-
-            // Prepare the data for sending to Google Apps Script
-            const requestData = {
-                action: editingId ? 'editData' : 'addData',
-                sheetName: sheetName,
-                data: data,
-            };
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestData),
-                });
-
-                const result = await response.json();
-                handleResponse(result, formType);
-
-            } catch (error) {
-                console.error("Error submitting form:", error);
-                statusMessageElement.textContent = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message;
-            } finally {
-                editingId = null;
-            }
+        } else {
+            statusMessageElement.textContent = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + response.message;
         }
+        setTimeout(() => {
+            statusMessageElement.textContent = '';
+        }, 5000);
+    }
 
+    // Function to load existing data from Google Sheets
+    function loadExistingData(sheetName) {
+        const table = sheetName === 'receive' ? receiveTable : sendTable;
+        const tableMessageElement = sheetName === 'receive' ? document.getElementById('receive-table-message') : document.getElementById('send-table-message');
 
+        tableMessageElement.textContent = 'กำลังโหลดข้อมูล...';
+        table.classList.add('hidden');
+        const requestData = {
+            action: 'getData',
+            sheetName: sheetName,
+        };
 
-        // Attach event listeners to the forms
-        receiveForm.addEventListener('submit', (event) => handleSubmit(event, 'receive'));
-        sendForm.addEventListener('submit', (event) => handleSubmit(event, 'send'));
-
-        // Callback function to handle the response from Google Apps Script
-        function handleResponse(response, formType) {
-            const statusMessageElement = formType === 'receive' ? receiveStatusMessage : sendStatusMessage;
-
-            if (response.success) {
-                statusMessageElement.textContent = 'บันทึกข้อมูลสำเร็จ';
-                if (formType === 'receive') {
-                    receiveForm.reset();
-                    loadExistingData('receive'); // Reload receive data
-                } else {
-                    sendForm.reset();
-                    loadExistingData('send'); // Reload send data
+        sendJsonp(requestData, (result) => {
+            if (result.success) {
+                const data = result.data;
+                if (sheetName === 'receive') {
+                    receiveData = data;
+                } else if (sheetName === 'send') {
+                    sendData = data;
                 }
-
+                populateTable(data, sheetName);
+                tableMessageElement.textContent = '';
+                table.classList.remove('hidden');
             } else {
-                statusMessageElement.textContent = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + response.message;
-            }
-            setTimeout(() => {
-                statusMessageElement.textContent = ''; // Clear message
-            }, 5000);
-        }
-
-        // Function to load existing data from Google Sheets
-        async function loadExistingData(sheetName) {
-            const table = sheetName === 'receive' ? receiveTable : sendTable;
-            const tableMessageElement = sheetName === 'receive' ? document.getElementById('receive-table-message') : document.getElementById('send-table-message');
-
-            tableMessageElement.textContent = 'กำลังโหลดข้อมูล...';
-            table.classList.add('hidden'); // Hide the table initially
-            try {
-                const requestData = {
-                    action: 'getData',
-                    sheetName: sheetName,
-                };
-
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestData),
-                });
-                const result = await response.json();
-
-                if (result.success) {
-                    const data = result.data;
-                    if (sheetName === 'receive') {
-                        receiveData = data;
-                    } else if (sheetName === 'send') {
-                        sendData = data;
-                    }
-                    populateTable(data, sheetName);
-                    tableMessageElement.textContent = ''; // Clear message
-                    table.classList.remove('hidden'); // Show the table
-                } else {
-                    tableMessageElement.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + result.message;
-                    table.classList.add('hidden'); // Ensure table is hidden on error
-                }
-            } catch (error) {
-                console.error("Error fetching data:", error);
-                tableMessageElement.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message;
+                tableMessageElement.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + result.message;
                 table.classList.add('hidden');
             }
+        });
+    }
+
+    // Function to populate the table with data
+    function populateTable(data, sheetName) {
+        const table = sheetName === 'receive' ? receiveTable : sendTable;
+        const tableBody = table.querySelector('tbody');
+        tableBody.innerHTML = '';
+
+        if (data.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="${sheetName === 'receive' ? 9 : 8}" class="px-4 py-2 text-center text-gray-500">ไม่มีข้อมูล</td></tr>`;
+            return;
         }
 
-        // Function to populate the table with data
-        function populateTable(data, sheetName) {
-            const table = sheetName === 'receive' ? receiveTable : sendTable;
-            const tableBody = table.querySelector('tbody');
-            tableBody.innerHTML = ''; // Clear existing table rows
-
-            if (data.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="${sheetName === 'receive' ? 9 : 8}" class="px-4 py-2 text-center text-gray-500">ไม่มีข้อมูล</td></tr>`;
-                return;
-            }
-
-            data.forEach(item => {
-                let rowHtml = '';
-                if (sheetName === 'receive') {
-                    rowHtml = `
-                        <tr>
-                            <td class="px-4 py-2">${item['ทะเบียนรับเทศบาล'] || ''}</td>
-                            <td class="px-4 py-2">${item['วันที่รับ'] || ''}</td>
-                            <td class="px-4 py-2">${item['ประเภทหนังสือราชการ'] || ''}</td>
-                            <td class="px-4 py-2">${item['หัวเรื่อง'] || ''}</td>
-                            <td class="px-4 py-2">${item['ผู้ส่ง'] || ''}</td>
-                            <td class="px-4 py-2">${item['วันที่ส่ง'] || ''}</td>
-                            <td class="px-4 py-2">${item['ผู้รับ'] || ''}</td>
-                            <td class="px-4 py-2">${item['สถานะ'] || ''}</td>
-                            <td class="px-4 py-2">
-                                <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="editData('${item.id}', 'receive')">แก้ไข</button>
-                                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="deleteData('${item.id}', 'receive')">ลบ</button>
-                            </td>
-                        </tr>
-                    `;
-                } else if (sheetName === 'send') {
-                    rowHtml = `
-                        <tr>
-                            <td class="px-4 py-2">${item['ทะเบียนส่ง'] || ''}</td>
-                            <td class="px-4 py-2">${item['วันที่ส่ง'] || ''}</td>
-                            <td class="px-4 py-2">${item['ประเภทหนังสือ'] || ''}</td>
-                            <td class="px-4 py-2">${item['หัวเรื่อง'] || ''}</td>
-                            <td class="px-4 py-2">${item['ผู้รับ'] || ''}</td>
-                            <td class="px-4 py-2">${item['วันที่รับเรื่อง'] || ''}</td>
-                            <td class="px-4 py-2">${item['สถานะ'] || ''}</td>
-                            <td class="px-4 py-2">
-                                <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="editData('${item.id}', 'send')">แก้ไข</button>
-                                 <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="deleteData('${item.id}', 'send')">ลบ</button>
-                            </td>
-                        </tr>
-                    `;
-                }
-                tableBody.insertAdjacentHTML('beforeend', rowHtml);
-            });
-             // Apply filters
+        data.forEach(item => {
+            let rowHtml = '';
             if (sheetName === 'receive') {
-                filterAndDisplayReceiveData();
+                rowHtml = `
+                    <tr>
+                        <td class="px-4 py-2">${item['ทะเบียนรับเทศบาล'] || ''}</td>
+                        <td class="px-4 py-2">${item['วันที่รับ'] || ''}</td>
+                        <td class="px-4 py-2">${item['ประเภทหนังสือราชการ'] || ''}</td>
+                        <td class="px-4 py-2">${item['หัวเรื่อง'] || ''}</td>
+                        <td class="px-4 py-2">${item['ผู้ส่ง'] || ''}</td>
+                        <td class="px-4 py-2">${item['วันที่ส่ง'] || ''}</td>
+                        <td class="px-4 py-2">${item['ผู้รับ'] || ''}</td>
+                        <td class="px-4 py-2">${item['สถานะ'] || ''}</td>
+                        <td class="px-4 py-2">
+                            <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="editData('${item.id}', 'receive')">แก้ไข</button>
+                            <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="deleteData('${item.id}', 'receive')">ลบ</button>
+                        </td>
+                    </tr>
+                `;
+            } else if (sheetName === 'send') {
+                rowHtml = `
+                    <tr>
+                        <td class="px-4 py-2">${item['ทะเบียนส่ง'] || ''}</td>
+                        <td class="px-4 py-2">${item['วันที่ส่ง'] || ''}</td>
+                        <td class="px-4 py-2">${item['ประเภทหนังสือ'] || ''}</td>
+                        <td class="px-4 py-2">${item['หัวเรื่อง'] || ''}</td>
+                        <td class="px-4 py-2">${item['ผู้รับ'] || ''}</td>
+                        <td class="px-4 py-2">${item['วันที่รับเรื่อง'] || ''}</td>
+                        <td class="px-4 py-2">${item['สถานะ'] || ''}</td>
+                        <td class="px-4 py-2">
+                            <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="editData('${item.id}', 'send')">แก้ไข</button>
+                            <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="deleteData('${item.id}', 'send')">ลบ</button>
+                        </td>
+                    </tr>
+                `;
             }
-            if (sheetName === 'send') {
-                filterAndDisplaySendData();
-            }
+            tableBody.insertAdjacentHTML('beforeend', rowHtml);
+        });
+        if (sheetName === 'receive') filterAndDisplayReceiveData();
+        if (sheetName === 'send') filterAndDisplaySendData();
+    }
+
+    // Function to handle editing of data
+    function editData(id, sheetName) {
+        const form = sheetName === 'receive' ? receiveForm : sendForm;
+        const data = sheetName === 'receive' ? receiveData : sendData;
+
+        const itemToEdit = data.find(item => item.id === id);
+        if (!itemToEdit) {
+            alert('ไม่พบข้อมูลที่ต้องการแก้ไข');
+            return;
         }
 
-        // Function to handle editing of data
-        async function editData(id, sheetName) {
-            const form = sheetName === 'receive' ? receiveForm : sendForm;
-            const data = sheetName === 'receive' ? receiveData : sendData;
-
-            const itemToEdit = data.find(item => item.id === id);
-            if (!itemToEdit) {
-                alert('ไม่พบข้อมูลที่ต้องการแก้ไข');
-                return;
-            }
-
-            editingId = id; // Set the editing ID
-
-            // Populate the form with the data
-            for (const key in itemToEdit) {
-                if (form.elements[key]) {
-                    if (form.elements[key].type === 'select-one') {
-                         form.elements[key].value = itemToEdit[key];
-                    }
-                    else if (form.elements[key].type === 'file') {
-                        //skip
-                    }
-                    else {
-                        form.elements[key].value = itemToEdit[key];
-                    }
-
-                }
-            }
-
-            // Change form button text.
-            form.querySelector('button[type="submit"]').textContent = 'อัปเดตข้อมูล';
-
-            // Switch to the appropriate tab
-            switchTab(sheetName);
-        }
-
-        // Function to handle deletion of data
-        async function deleteData(id, sheetName) {
-            if (!confirm(`ยืนยันการลบข้อมูล?`)) return;
-
-            const requestData = {
-                action: 'deleteData',
-                sheetName: sheetName,
-                id: id,
-            };
-
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestData),
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    loadExistingData(sheetName); // Reload data
-                    alert('ลบข้อมูลสำเร็จ');
+        editingId = id;
+        for (const key in itemToEdit) {
+            if (form.elements[key]) {
+                if (form.elements[key].type === 'select-one') {
+                    form.elements[key].value = itemToEdit[key];
+                } else if (form.elements[key].type === 'file') {
+                    // skip
                 } else {
-                    alert('เกิดข้อผิดพลาดในการลบข้อมูล: ' + result.message);
+                    form.elements[key].value = itemToEdit[key];
                 }
-            } catch (error) {
-                console.error("Error deleting data:", error);
-                alert('เกิดข้อผิดพลาดในการลบข้อมูล: ' + error.message);
             }
         }
+        form.querySelector('button[type="submit"]').textContent = 'อัปเดตข้อมูล';
+        openTab(null, sheetName);
+    }
 
+    // Function to handle deletion of data
+    function deleteData(id, sheetName) {
+        if (!confirm(`ยืนยันการลบข้อมูล?`)) return;
 
+        const requestData = {
+            action: 'deleteData',
+            sheetName: sheetName,
+            id: id,
+        };
 
-        // Event listener for filtering receive data
-        receiveSearchInput.addEventListener('input', filterAndDisplayReceiveData);
-        receiveFilterStatus.addEventListener('change', filterAndDisplayReceiveData);
-
-        // Event listener for filtering send data
-        sendSearchInput.addEventListener('input', filterAndDisplaySendData);
-        sendFilterStatus.addEventListener('change', filterAndDisplaySendData);
-
-        // Function to filter and display receive data
-        function filterAndDisplayReceiveData() {
-            const searchTerm = receiveSearchInput.value.toLowerCase();
-            const filterStatus = receiveFilterStatus.value;
-
-            const filteredData = receiveData.filter(item => {
-                const searchMatch =
-                    item['ทะเบียนรับเทศบาล'].toLowerCase().includes(searchTerm) ||
-                    item['วันที่รับ'].toLowerCase().includes(searchTerm) ||
-                    item['ประเภทหนังสือราชการ'].toLowerCase().includes(searchTerm) ||
-                    item['หัวเรื่อง'].toLowerCase().includes(searchTerm) ||
-                    item['ผู้ส่ง'].toLowerCase().includes(searchTerm) ||
-                    item['ผู้รับ'].toLowerCase().includes(searchTerm);
-
-                const statusMatch = !filterStatus || item['สถานะ'] === filterStatus;
-
-                return searchMatch && statusMatch;
-            });
-
-            const receiveTableBody = receiveTable.querySelector('tbody');
-            receiveTableBody.innerHTML = ''; // Clear existing table rows
-
-            if (filteredData.length === 0) {
-                receiveTableBody.innerHTML = `<tr><td colspan="9" class="px-4 py-2 text-center text-gray-500">ไม่มีข้อมูล</td></tr>`;
+        sendJsonp(requestData, (result) => {
+            if (result.success) {
+                loadExistingData(sheetName);
+                alert('ลบข้อมูลสำเร็จ');
             } else {
-                filteredData.forEach(item => {
-                    const rowHtml = `
-                        <tr>
-                            <td class="px-4 py-2">${item['ทะเบียนรับเทศบาล'] || ''}</td>
-                            <td class="px-4 py-2">${item['วันที่รับ'] || ''}</td>
-                            <td class="px-4 py-2">${item['ประเภทหนังสือราชการ'] || ''}</td>
-                            <td class="px-4 py-2">${item['หัวเรื่อง'] || ''}</td>
-                            <td class="px-4 py-2">${item['ผู้ส่ง'] || ''}</td>
-                            <td class="px-4 py-2">${item['วันที่ส่ง'] || ''}</td>
-                            <td class="px-4 py-2">${item['ผู้รับ'] || ''}</td>
-                            <td class="px-4 py-2">${item['สถานะ'] || ''}</td>
-                            <td class="px-4 py-2">
-                                <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="editData('${item.id}', 'receive')">แก้ไข</button>
-                                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="deleteData('${item.id}', 'receive')">ลบ</button>
-                            </td>
-                        </tr>
-                    `;
-                    receiveTableBody.insertAdjacentHTML('beforeend', rowHtml);
-                });
+                alert('เกิดข้อผิดพลาดในการลบข้อมูล: ' + result.message);
             }
-        }
+        });
+    }
 
-        // Function to filter and display send data
-        function filterAndDisplaySendData() {
-            const searchTerm = sendSearchInput.value.toLowerCase();
-            const filterStatus = sendFilterStatus.value;
+    // Event listener for filtering receive data
+    receiveSearchInput.addEventListener('input', filterAndDisplayReceiveData);
+    receiveFilterStatus.addEventListener('change', filterAndDisplayReceiveData);
 
-            const filteredData = sendData.filter(item => {
-                const searchMatch =
-                    item['ทะเบียนส่ง'].toLowerCase().includes(searchTerm) ||
-                    item['วันที่ส่ง'].toLowerCase().includes(searchTerm) ||
-                    item['ประเภทหนังสือ'].toLowerCase().includes(searchTerm) ||
-                    item['หัวเรื่อง'].toLowerCase().includes(searchTerm) ||
-                    item['ผู้รับ'].toLowerCase().includes(searchTerm) ||
-                    item['วันที่รับเรื่อง'].toLowerCase().includes(searchTerm);
-                const statusMatch = !filterStatus || item['สถานะ'] === filterStatus;
+    // Event listener for filtering send data
+    sendSearchInput.addEventListener('input', filterAndDisplaySendData);
+    sendFilterStatus.addEventListener('change', filterAndDisplaySendData);
 
-                return searchMatch && statusMatch;
+    // Function to filter and display receive data
+    function filterAndDisplayReceiveData() {
+        const searchTerm = receiveSearchInput.value.toLowerCase();
+        const filterStatus = receiveFilterStatus.value;
+
+        const filteredData = receiveData.filter(item => {
+            const searchMatch =
+                item['ทะเบียนรับเทศบาล'].toLowerCase().includes(searchTerm) ||
+                item['วันที่รับ'].toLowerCase().includes(searchTerm) ||
+                item['ประเภทหนังสือราชการ'].toLowerCase().includes(searchTerm) ||
+                item['หัวเรื่อง'].toLowerCase().includes(searchTerm) ||
+                item['ผู้ส่ง'].toLowerCase().includes(searchTerm) ||
+                item['ผู้รับ'].toLowerCase().includes(searchTerm);
+
+            const statusMatch = !filterStatus || item['สถานะ'] === filterStatus;
+            return searchMatch && statusMatch;
+        });
+
+        const receiveTableBody = receiveTable.querySelector('tbody');
+        receiveTableBody.innerHTML = '';
+
+        if (filteredData.length === 0) {
+            receiveTableBody.innerHTML = `<tr><td colspan="9" class="px-4 py-2 text-center text-gray-500">ไม่มีข้อมูล</td></tr>`;
+        } else {
+            filteredData.forEach(item => {
+                const rowHtml = `
+                    <tr>
+                        <td class="px-4 py-2">${item['ทะเบียนรับเทศบาล'] || ''}</td>
+                        <td class="px-4 py-2">${item['วันที่รับ'] || ''}</td>
+                        <td class="px-4 py-2">${item['ประเภทหนังสือราชการ'] || ''}</td>
+                        <td class="px-4 py-2">${item['หัวเรื่อง'] || ''}</td>
+                        <td class="px-4 py-2">${item['ผู้ส่ง'] || ''}</td>
+                        <td class="px-4 py-2">${item['วันที่ส่ง'] || ''}</td>
+                        <td class="px-4 py-2">${item['ผู้รับ'] || ''}</td>
+                        <td class="px-4 py-2">${item['สถานะ'] || ''}</td>
+                        <td class="px-4 py-2">
+                            <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="editData('${item.id}', 'receive')">แก้ไข</button>
+                            <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="deleteData('${item.id}', 'receive')">ลบ</button>
+                        </td>
+                    </tr>
+                `;
+                receiveTableBody.insertAdjacentHTML('beforeend', rowHtml);
             });
-
-            const sendTableBody = sendTable.querySelector('tbody');
-            sendTableBody.innerHTML = ''; // Clear existing table rows
-
-            if (filteredData.length === 0) {
-                sendTableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-2 text-center text-gray-500">ไม่มีข้อมูล</td></tr>`;
-            } else {
-                filteredData.forEach(item => {
-                    const rowHtml = `
-                         <tr>
-                            <td class="px-4 py-2">${item['ทะเบียนส่ง'] || ''}</td>
-                            <td class="px-4 py-2">${item['วันที่ส่ง'] || ''}</td>
-                            <td class="px-4 py-2">${item['ประเภทหนังสือ'] || ''}</td>
-                            <td class="px-4 py-2">${item['หัวเรื่อง'] || ''}</td>
-                            <td class="px-4 py-2">${item['ผู้รับ'] || ''}</td>
-                            <td class="px-4 py-2">${item['วันที่รับเรื่อง'] || ''}</td>
-                            <td class="px-4 py-2">${item['สถานะ'] || ''}</td>
-                            <td class="px-4 py-2">
-                                <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="editData('${item.id}', 'send')">แก้ไข</button>
-                                 <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="deleteData('${item.id}', 'send')">ลบ</button>
-                            </td>
-                        </tr>
-                    `;
-                    sendTableBody.insertAdjacentHTML('beforeend', rowHtml);
-                });
-            }
         }
+    }
 
+    // Function to filter and display send data
+    function filterAndDisplaySendData() {
+        const searchTerm = sendSearchInput.value.toLowerCase();
+        const filterStatus = sendFilterStatus.value;
 
+        const filteredData = sendData.filter(item => {
+            const searchMatch =
+                item['ทะเบียนส่ง'].toLowerCase().includes(searchTerm) ||
+                item['วันที่ส่ง'].toLowerCase().includes(searchTerm) ||
+                item['ประเภทหนังสือ'].toLowerCase().includes(searchTerm) ||
+                item['หัวเรื่อง'].toLowerCase().includes(searchTerm) ||
+                item['ผู้รับ'].toLowerCase().includes(searchTerm) ||
+                item['วันที่รับเรื่อง'].toLowerCase().includes(searchTerm);
+            const statusMatch = !filterStatus || item['สถานะ'] === filterStatus;
+            return searchMatch && statusMatch;
+        });
 
-        async function updateStatistics() {
-            try {
-                // Fetch receive data
-                let receiveResponse = await fetch(SCRIPT_URL + '?action=getData&sheetName=receive');
-                let receiveResult = await receiveResponse.json();
+        const sendTableBody = sendTable.querySelector('tbody');
+        sendTableBody.innerHTML = '';
+
+        if (filteredData.length === 0) {
+            sendTableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-2 text-center text-gray-500">ไม่มีข้อมูล</td></tr>`;
+        } else {
+            filteredData.forEach(item => {
+                const rowHtml = `
+                     <tr>
+                        <td class="px-4 py-2">${item['ทะเบียนส่ง'] || ''}</td>
+                        <td class="px-4 py-2">${item['วันที่ส่ง'] || ''}</td>
+                        <td class="px-4 py-2">${item['ประเภทหนังสือ'] || ''}</td>
+                        <td class="px-4 py-2">${item['หัวเรื่อง'] || ''}</td>
+                        <td class="px-4 py-2">${item['ผู้รับ'] || ''}</td>
+                        <td class="px-4 py-2">${item['วันที่รับเรื่อง'] || ''}</td>
+                        <td class="px-4 py-2">${item['สถานะ'] || ''}</td>
+                        <td class="px-4 py-2">
+                            <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="editData('${item.id}', 'send')">แก้ไข</button>
+                             <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline text-xs" onclick="deleteData('${item.id}', 'send')">ลบ</button>
+                        </td>
+                    </tr>
+                `;
+                sendTableBody.insertAdjacentHTML('beforeend', rowHtml);
+            });
+        }
+    }
+
+    // ฟังก์ชันอัปเดตสถิติ
+    function updateStatistics() {
+        sendJsonp({ action: 'getData', sheetName: 'receive' }, (receiveResult) => {
+            sendJsonp({ action: 'getData', sheetName: 'send' }, (sendResult) => {
                 let receiveData = receiveResult.data || [];
-
-                // Fetch send data
-                let sendResponse = await fetch(SCRIPT_URL + '?action=getData&sheetName=send');
-                let sendResult = await sendResponse.json();
                 let sendData = sendResult.data || [];
-
-                // Calculate statistics for receive
                 let receiveTotal = receiveData.length;
                 let receivePending = receiveData.filter(item => item['สถานะ'] === 'อยู่ระหว่างเสนอ').length;
                 let receiveCompleted = receiveData.filter(item => item['สถานะ'] === 'ดำเนินการแล้วเสร็จ').length;
-
-                // Calculate statistics for send
                 let sendTotal = sendData.length;
                 let sendPending = sendData.filter(item => item['สถานะ'] === 'อยู่ระหว่างเสนอ').length;
                 let sendCompleted = sendData.filter(item => item['สถานะ'] === 'ดำเนินการแล้วเสร็จ').length;
-
-                // Update the UI
                 receiveTotalElement.textContent = receiveTotal;
                 receivePendingElement.textContent = receivePending;
                 receiveCompletedElement.textContent = receiveCompleted;
                 sendTotalElement.textContent = sendTotal;
                 sendPendingElement.textContent = sendPending;
                 sendCompletedElement.textContent = sendCompleted;
-
-            } catch (error) {
-                console.error("Error fetching statistics:", error);
-                // Handle error (e.g., display a message to the user)
-                 receiveTotalElement.textContent = 'N/A';
-                receivePendingElement.textContent = 'N/A';
-                receiveCompletedElement.textContent = 'N/A';
-                sendTotalElement.textContent = 'N/A';
-                sendPendingElement.textContent = 'N/A';
-                sendCompletedElement.textContent = 'N/A';
-            }
-        }
-
-    </script>
+            });
+        });
+    }
+</script>
 </body>
 </html>
