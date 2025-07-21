@@ -1,296 +1,1010 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ทะเบียนรับส่งหนังสือกองช่างสุขาภิบาล</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #f5f5f5;
-      color: #333;
-    }
-    header {
-      background-color: #dc3545;
-      text-align: center;
-      padding: 10px;
-    }
-    header img {
-      height: 100px;
-      width: auto;
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      background-color: #dc3545;
-    }
-    nav button {
-      background: none;
-      border: none;
-      color: #fff;
-      padding: 10px 20px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background 0.3s;
-    }
-    nav button.active,
-    nav button:hover {
-      background-color: #a71d2a;
-    }
-    section {
-      max-width: 900px;
-      margin: 20px auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    input, select, textarea, button {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-    footer {
-      background-color: #dc3545;
-      color: #fff;
-      text-align: center;
-      padding: 10px;
-      margin-top: 30px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    table th, table td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
-    table th {
-      background-color: #f2f2f2;
-    }
-    #loading {
-      display: none;
-      text-align: center;
-      color: #dc3545;
-      margin-top: 10px;
-    }
-    .chart-container {
-      width: 100%;
-      max-width: 600px;
-      margin: auto;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ทะเบียนรับส่งหนังสือกองช่างสุขาภิบาล เทศบาลนครเกาะสมุย</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for statistics charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Active tab styling */
+        .tab-button.active {
+            background-color: #dc2626; /* Red */
+            color: white;
+            font-weight: 600;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Styling for iOS-like buttons */
+        .ios-button {
+            background-color: #dc2626; /* Red */
+            color: white;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .ios-button:hover {
+            background-color: #b91c1c; /* Darker red on hover */
+            transform: translateY(-1px);
+        }
+        .ios-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        /* Styling for iOS-like input fields */
+        .ios-input {
+            border: 1px solid #d1d5db; /* Light gray border */
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 1rem;
+            width: 100%;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .ios-input:focus {
+            outline: none;
+            border-color: #ef4444; /* Red focus border */
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+        }
+        .ios-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        /* Message box styling */
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50; /* Green for success */
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .message-box.error {
+            background-color: #f44336; /* Red for error */
+        }
+        .message-box.show {
+            display: block;
+            opacity: 1;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Confirmation Modal Styling */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-in-out;
+        }
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+    </style>
 </head>
-<body>
-  <header>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Seal_of_Ko_Samui.png" alt="โลโก้เทศบาล">
-  </header>
+<body class="min-h-screen flex flex-col">
+    <!-- Message Box -->
+    <div id="messageBox" class="message-box"></div>
 
-  <nav>
-    <button class="tab-button active" data-tab="receive">ลงทะเบียนหนังสือรับ</button>
-    <button class="tab-button" data-tab="send">ลงทะเบียนหนังสือส่ง</button>
-    <button class="tab-button" data-tab="dashboard">แดชบอร์ดสถิติ</button>
-  </nav>
-
-  <section id="receive" class="tab-content">
-    <h2>ลงทะเบียนหนังสือรับ</h2>
-    <form id="receiveForm">
-      <label>เลขทะเบียนรับ</label>
-      <input type="text" name="regNo" required />
-      <label>วันที่รับ (mm/dd/yyyy)</label>
-      <input type="date" name="receiveDate" required />
-      <label>เลขที่หนังสือ</label>
-      <input type="text" name="bookNo" required />
-      <label>ลงวันที่ (dd/mm/yyyy)</label>
-      <input type="date" name="bookDate" required />
-      <label>จาก (หน่วยงานต้นทาง)</label>
-      <input type="text" name="from" required />
-      <label>ถึง (หน่วยงานปลายทาง)</label>
-      <input type="text" name="to" required />
-      <label>เรื่อง</label>
-      <input type="text" name="subject" required />
-      <label>การปฏิบัติ</label>
-      <select name="action" required>
-        <option value="">-- เลือกการปฏิบัติ --</option>
-        <option>เพื่อทราบ</option>
-        <option>เพื่อพิจารณา</option>
-        <option>เพื่อดำเนินการ</option>
-        <option>เพื่ออนุมัติ</option>
-        <option>เพื่อเก็บเป็นหลักฐาน</option>
-      </select>
-      <label>หมายเหตุ</label>
-      <textarea name="note"></textarea>
-      <label>อัปโหลดเอกสาร (.pdf, .doc, .docx)</label>
-      <input type="file" id="fileReceive" accept=".pdf,.doc,.docx"/>
-      <button type="submit">บันทึกข้อมูล</button>
-      <div id="loading">กำลังบันทึก...</div>
-    </form>
-  </section>
-
-  <section id="send" class="tab-content" style="display:none;">
-    <h2>ลงทะเบียนหนังสือส่ง</h2>
-    <form id="sendForm">
-      <label>เลขทะเบียนรับ</label>
-      <input type="text" name="regNo" required />
-      <label>วันที่รับ (mm/dd/yyyy)</label>
-      <input type="date" name="receiveDate" required />
-      <label>เลขที่หนังสือ</label>
-      <input type="text" name="bookNo" required />
-      <label>ลงวันที่ (dd/mm/yyyy)</label>
-      <input type="date" name="bookDate" required />
-      <label>จาก (หน่วยงานต้นทาง)</label>
-      <input type="text" name="from" required />
-      <label>ถึง (หน่วยงานปลายทาง)</label>
-      <input type="text" name="to" required />
-      <label>เรื่อง</label>
-      <input type="text" name="subject" required />
-      <label>การปฏิบัติ</label>
-      <select name="action" required>
-        <option value="">-- เลือกการปฏิบัติ --</option>
-        <option>เพื่อทราบ</option>
-        <option>เพื่อพิจารณา</option>
-        <option>เพื่อดำเนินการ</option>
-        <option>เพื่ออนุมัติ</option>
-        <option>เพื่อเก็บเป็นหลักฐาน</option>
-      </select>
-      <label>หมายเหตุ</label>
-      <textarea name="note"></textarea>
-      <label>อัปโหลดเอกสาร (.pdf, .doc, .docx)</label>
-      <input type="file" id="fileSend" accept=".pdf,.doc,.docx"/>
-      <button type="submit">บันทึกข้อมูล</button>
-      <div id="loading">กำลังบันทึก...</div>
-    </form>
-
-    <table id="sendTable">
-      <thead>
-        <tr>
-          <th>เลขทะเบียน</th>
-          <th>เรื่อง</th>
-          <th>ไฟล์</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
-
-  <section id="dashboard" class="tab-content" style="display:none;">
-    <h2>แดชบอร์ดสถิติ</h2>
-    <div class="chart-container">
-      <canvas id="chart"></canvas>
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800" id="modalTitle">ยืนยันการดำเนินการ</h3>
+            <p class="mb-6 text-gray-700" id="modalMessage">คุณต้องการดำเนินการนี้หรือไม่?</p>
+            <div class="flex justify-end space-x-4">
+                <button id="modalCancelBtn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">ยกเลิก</button>
+                <button id="modalConfirmBtn" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">ยืนยัน</button>
+            </div>
+        </div>
     </div>
-  </section>
 
-  <footer>
-    ©2025 ทะเบียนรับส่งหนังสือกองช่างสุขาภิบาล กองช่างสุขาภิบาล โดย นายธีรศักดิ์ พูลเขาล้าน
-  </footer>
+    <!-- Header -->
+    <header class="bg-red-600 p-4 shadow-md">
+        <div class="container mx-auto flex flex-col sm:flex-row items-center justify-center">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Seal_of_Ko_Samui.png" alt="Seal of Ko Samui" class="h-24 sm:h-28 object-contain mb-2 sm:mb-0 sm:mr-4">
+            <h1 class="text-white text-xl sm:text-2xl md:text-3xl font-bold text-center">
+                ทะเบียนรับส่งหนังสือกองช่างสุขาภิบาล<br class="sm:hidden">เทศบาลนครเกาะสมุย
+            </h1>
+        </div>
+    </header>
 
-  <script>
-    document.querySelectorAll('.tab-button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.tab-content').forEach(section => {
-          section.style.display = section.id === btn.dataset.tab ? 'block' : 'none';
+    <!-- Main Content Area -->
+    <main class="flex-grow container mx-auto p-4 md:p-8">
+        <!-- Tab Navigation -->
+        <div class="flex flex-wrap justify-center mb-6 bg-white rounded-lg shadow-md p-2">
+            <button id="tab1-btn" class="tab-button active px-4 py-2 mx-1 my-1 rounded-lg text-red-600 hover:bg-red-50 transition-colors duration-200 text-sm sm:text-base">ลงทะเบียนหนังสือรับ</button>
+            <button id="tab2-btn" class="tab-button px-4 py-2 mx-1 my-1 rounded-lg text-red-600 hover:bg-red-50 transition-colors duration-200 text-sm sm:text-base">ลงทะเบียนหนังสือส่ง</button>
+            <button id="tab3-btn" class="tab-button px-4 py-2 mx-1 my-1 rounded-lg text-red-600 hover:bg-red-50 transition-colors duration-200 text-sm sm:text-base">สถิติการรับส่งหนังสือ</button>
+        </div>
+
+        <!-- Tab Content 1: ลงทะเบียนหนังสือรับ -->
+        <div id="tab1-content" class="tab-content active bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-red-600 mb-6 text-center">ลงทะเบียนหนังสือรับ</h2>
+            <form id="receiveForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="receiveNumber" class="block text-gray-700 text-sm font-medium mb-2">เลขทะเบียนรับ</label>
+                    <input type="text" id="receiveNumber" name="receiveNumber" class="ios-input" required>
+                </div>
+                <div>
+                    <label for="receiveDate" class="block text-gray-700 text-sm font-medium mb-2">วันที่รับ</label>
+                    <input type="date" id="receiveDate" name="receiveDate" class="ios-input" required>
+                </div>
+                <div>
+                    <label for="receiveDocNumber" class="block text-gray-700 text-sm font-medium mb-2">เลขที่หนังสือ</label>
+                    <input type="text" id="receiveDocNumber" name="documentNumber" class="ios-input" required>
+                </div>
+                <div>
+                    <label for="receiveDocDate" class="block text-gray-700 text-sm font-medium mb-2">ลงวันที่</label>
+                    <input type="date" id="receiveDocDate" name="documentDate" class="ios-input" required>
+                </div>
+                <div>
+                    <label for="receiveFromOrg" class="block text-gray-700 text-sm font-medium mb-2">จาก (หน่วยงานต้นทาง)</label>
+                    <input type="text" id="receiveFromOrg" name="fromOrg" class="ios-input" required>
+                </div>
+                <div>
+                    <label for="receiveToOrg" class="block text-gray-700 text-sm font-medium mb-2">ถึง (หน่วยงานปลายทาง)</label>
+                    <input type="text" id="receiveToOrg" name="toOrg" class="ios-input" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="receiveSubject" class="block text-gray-700 text-sm font-medium mb-2">เรื่อง</label>
+                    <input type="text" id="receiveSubject" name="subject" class="ios-input" required>
+                </div>
+                <div>
+                    <label for="receiveAction" class="block text-gray-700 text-sm font-medium mb-2">การปฏิบัติ</label>
+                    <select id="receiveAction" name="action" class="ios-input ios-select" required>
+                        <option value="">-- เลือกการปฏิบัติ --</option>
+                        <option value="เพื่อทราบ">เพื่อทราบ</option>
+                        <option value="เพื่อพิจารณา">เพื่อพิจารณา</option>
+                        <option value="เพื่อดำเนินการ">เพื่อดำเนินการ</option>
+                        <option value="เพื่ออนุมัติ">เพื่ออนุมัติ</option>
+                        <option value="เพื่อเก็บเป็นหลักฐาน">เพื่อเก็บเป็นหลักฐาน</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="receiveStatus" class="block text-gray-700 text-sm font-medium mb-2">สถานะหนังสือ</label>
+                    <select id="receiveStatus" name="status" class="ios-input ios-select" required>
+                        <option value="อยู่ระหว่างเสนอ">อยู่ระหว่างเสนอ</option>
+                        <option value="ดำเนินการแล้วเสร็จ">ดำเนินการแล้วเสร็จ</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="receiveNotes" class="block text-gray-700 text-sm font-medium mb-2">หมายเหตุ</label>
+                    <textarea id="receiveNotes" name="notes" rows="3" class="ios-input"></textarea>
+                </div>
+                <div>
+                    <label for="receiveDepartment" class="block text-gray-700 text-sm font-medium mb-2">ฝ่ายที่รับผิดชอบ</label>
+                    <select id="receiveDepartment" name="department" class="ios-input ios-select" required>
+                        <option value="">-- เลือกฝ่ายที่รับผิดชอบ --</option>
+                        <option value="งานบริหาร">งานบริหาร</option>
+                        <option value="ฝ่ายปรับปรุงคุณภาพน้ำ">ฝ่ายปรับปรุงคุณภาพน้ำ</option>
+                        <option value="ฝ่ายจัดการสิ่งแวดล้อมด้านวัสดุใช้แล้ว">ฝ่ายจัดการสิ่งแวดล้อมด้านวัสดุใช้แล้ว</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="receiveDocumentFile" class="block text-gray-700 text-sm font-medium mb-2">อัปโหลดเอกสาร (.pdf, .doc, .docx)</label>
+                    <input type="file" id="receiveDocumentFile" name="documentFile" accept=".pdf,.doc,.docx" class="ios-input p-2">
+                </div>
+                <div class="md:col-span-2 flex justify-center mt-4">
+                    <button type="submit" class="ios-button w-full md:w-auto">
+                        <span id="receiveLoadingSpinner" class="loading-spinner hidden"></span>
+                        บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+
+            <hr class="my-8 border-gray-300">
+
+            <h3 class="text-xl font-semibold text-red-600 mb-4 text-center">รายการหนังสือรับที่บันทึก</h3>
+            <div class="mb-4">
+                <input type="text" id="searchReceive" placeholder="ค้นหาเอกสารรับ..." class="ios-input">
+            </div>
+            <div id="receiveDocumentList" class="overflow-x-auto">
+                <!-- Documents will be loaded here -->
+                <p class="text-center text-gray-500">กำลังโหลดข้อมูล...</p>
+            </div>
+        </div>
+
+        <!-- Tab Content 2: ลงทะเบียนหนังสือส่ง -->
+        <div id="tab2-content" class="tab-content bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-red-600 mb-6 text-center">ลงทะเบียนหนังสือส่ง</h2>
+            <form id="sendForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="sendDocType" class="block text-gray-700 text-sm font-medium mb-2">ประเภทหนังสือ</label>
+                    <select id="sendDocType" name="documentType" class="ios-input ios-select" required>
+                        <option value="">-- เลือกประเภทหนังสือ --</option>
+                        <option value="บันทึกข้อความ">บันทึกข้อความ</option>
+                        <option value="หนังสือออก">หนังสือออก</option>
+                        <option value="ประกาศ">ประกาศ</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="sendDocNumber" class="block text-gray-700 text-sm font-medium mb-2">เลขที่หนังสือ</label>
+                    <input type="text" id="sendDocNumber" name="documentNumber" class="ios-input" required>
+                </div>
+                <!-- Added "ลงวันที่" field for Send form -->
+                <div>
+                    <label for="sendDocDate" class="block text-gray-700 text-sm font-medium mb-2">ลงวันที่</label>
+                    <input type="date" id="sendDocDate" name="documentDate" class="ios-input" required>
+                </div>
+                <div>
+                    <label for="sendFromOrg" class="block text-gray-700 text-sm font-medium mb-2">จาก (หน่วยงานต้นทาง)</label>
+                    <input type="text" id="sendFromOrg" name="fromOrg" class="ios-input" required>
+                </div>
+                <div>
+                    <label for="sendToOrg" class="block text-gray-700 text-sm font-medium mb-2">ถึง (หน่วยงานปลายทาง)</label>
+                    <input type="text" id="sendToOrg" name="toOrg" class="ios-input" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="sendSubject" class="block text-gray-700 text-sm font-medium mb-2">เรื่อง</label>
+                    <input type="text" id="sendSubject" name="subject" class="ios-input" required>
+                </div>
+                <div>
+                    <label for="sendAction" class="block text-gray-700 text-sm font-medium mb-2">การปฏิบัติ</label>
+                    <select id="sendAction" name="action" class="ios-input ios-select" required>
+                        <option value="">-- เลือกการปฏิบัติ --</option>
+                        <option value="เพื่อทราบ">เพื่อทราบ</option>
+                        <option value="เพื่อพิจารณา">เพื่อพิจารณา</option>
+                        <option value="เพื่อดำเนินการ">เพื่อดำเนินการ</option>
+                        <option value="เพื่ออนุมัติ">เพื่ออนุมัติ</option>
+                        <option value="เพื่อเก็บเป็นหลักฐาน">เพื่อเก็บเป็นหลักฐาน</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="sendStatus" class="block text-gray-700 text-sm font-medium mb-2">สถานะหนังสือ</label>
+                    <select id="sendStatus" name="status" class="ios-input ios-select" required>
+                        <option value="อยู่ระหว่างเสนอ">อยู่ระหว่างเสนอ</option>
+                        <option value="ดำเนินการแล้วเสร็จ">ดำเนินการแล้วเสร็จ</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="sendNotes" class="block text-gray-700 text-sm font-medium mb-2">หมายเหตุ</label>
+                    <textarea id="sendNotes" name="notes" rows="3" class="ios-input"></textarea>
+                </div>
+                <div>
+                    <label for="sendDepartment" class="block text-gray-700 text-sm font-medium mb-2">ฝ่ายที่รับผิดชอบ</label>
+                    <select id="sendDepartment" name="department" class="ios-input ios-select" required>
+                        <option value="">-- เลือกฝ่ายที่รับผิดชอบ --</option>
+                        <option value="งานบริหาร">งานบริหาร</option>
+                        <option value="ฝ่ายปรับปรุงคุณภาพน้ำ">ฝ่ายปรับปรุงคุณภาพน้ำ</option>
+                        <option value="ฝ่ายจัดการสิ่งแวดล้อมด้านวัสดุใช้แล้ว">ฝ่ายจัดการสิ่งแวดล้อมด้านวัสดุใช้แล้ว</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="sendDocumentFile" class="block text-gray-700 text-sm font-medium mb-2">อัปโหลดเอกสาร (.pdf, .doc, .docx)</label>
+                    <input type="file" id="sendDocumentFile" name="documentFile" accept=".pdf,.doc,.docx" class="ios-input p-2">
+                </div>
+                <div class="md:col-span-2 flex justify-center mt-4">
+                    <button type="submit" class="ios-button w-full md:w-auto">
+                        <span id="sendLoadingSpinner" class="loading-spinner hidden"></span>
+                        บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+
+            <hr class="my-8 border-gray-300">
+
+            <h3 class="text-xl font-semibold text-red-600 mb-4 text-center">รายการหนังสือส่งที่บันทึก</h3>
+            <div class="mb-4">
+                <input type="text" id="searchSend" placeholder="ค้นหาเอกสารส่ง..." class="ios-input">
+            </div>
+            <div id="sendDocumentList" class="overflow-x-auto">
+                <!-- Documents will be loaded here -->
+                <p class="text-center text-gray-500">กำลังโหลดข้อมูล...</p>
+            </div>
+        </div>
+
+        <!-- Tab Content 3: สถิติการรับส่งหนังสือ -->
+        <div id="tab3-content" class="tab-content bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-red-600 mb-6 text-center">สถิติการรับส่งหนังสือ</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">สถานะเอกสารรวม</h3>
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">การกระจายตามฝ่ายที่รับผิดชอบ</h3>
+                    <canvas id="departmentChart"></canvas>
+                </div>
+                <div class="lg:col-span-2 bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">จำนวนหนังสือรับ-ส่งย้อนหลัง 6 เดือน</h3>
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+            <div id="statsDataDisplay" class="mt-8 text-center text-gray-700 border border-gray-300 p-6 rounded-lg bg-gray-50 shadow-sm">
+                <p class="mb-2"><strong>รวมหนังสือรับ:</strong> <span id="totalReceiveStats">0</span></p>
+                <p class="mb-2"><strong>รวมหนังสือส่ง:</strong> <span id="totalSendStats">0</span></p>
+                <p class="mb-2"><strong>หนังสือรับอยู่ระหว่างเสนอ:</strong> <span id="receivePendingStats">0</span></p>
+                <p class="mb-2"><strong>หนังสือรับดำเนินการแล้วเสร็จ:</strong> <span id="receiveCompletedStats">0</span></p>
+                <p class="mb-2"><strong>หนังสือส่งอยู่ระหว่างเสนอ:</strong> <span id="sendPendingStats">0</span></p>
+                <p class="mb-2"><strong>หนังสือส่งดำเนินการแล้วเสร็จ:</strong> <span id="sendCompletedStats">0</span></p>
+            </div>
+        </main>
+
+    <!-- Footer -->
+    <footer class="bg-red-600 p-4 mt-8 shadow-inner">
+        <div class="container mx-auto text-center text-white text-sm">
+            &copy;2025 ทะเบียนรับส่งหนังสือกองช่างสุขาภิบาล กองช่างสุขาภิบาล โดย นายธีรศักดิ์ พูลเขาล้าน
+        </div>
+    </footer>
+
+    <script>
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGs5cVEgNWbAcbG5O61SKaNhe22uAlaBJVSEaXZDF33h_ngggQcomaVGL5lhMSHfF2WQ/exec';
+
+        // Helper function to show messages
+        function showMessage(message, type = 'success') {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.className = `message-box show ${type}`;
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000); // Hide after 3 seconds
+        }
+
+        // Helper function to show/hide loading spinner
+        function toggleLoading(spinnerId, show) {
+            const spinner = document.getElementById(spinnerId);
+            if (spinner) {
+                if (show) {
+                    spinner.classList.remove('hidden');
+                } else {
+                    spinner.classList.add('hidden');
+                }
+            }
+        }
+
+        // Global variables for confirmation modal
+        let currentConfirmCallback = null;
+
+        /**
+         * Shows a custom confirmation modal.
+         * @param {string} message The message to display in the modal.
+         * @param {function(boolean): void} onConfirm Callback function to execute when user confirms or cancels.
+         */
+        function showConfirmationModal(message, onConfirm) {
+            const modal = document.getElementById('confirmationModal');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+            const modalCancelBtn = document.getElementById('modalCancelBtn');
+
+            modalMessage.textContent = message;
+            currentConfirmCallback = onConfirm;
+
+            modalConfirmBtn.onclick = () => {
+                modal.classList.remove('show');
+                if (currentConfirmCallback) {
+                    currentConfirmCallback(true);
+                }
+            };
+
+            modalCancelBtn.onclick = () => {
+                modal.classList.remove('show');
+                if (currentConfirmCallback) {
+                    currentConfirmCallback(false);
+                }
+            };
+
+            modal.classList.add('show');
+        }
+
+        /**
+         * Helper function to format date string to DD/MM/YYYY.
+         * Can handle YYYY-MM-DD HH:mm:ss (timestamp) or DD/MM/YYYY strings.
+         * @param {string} dateInput The date string to format.
+         * @returns {string} The formatted date string in DD/MM/YYYY format, or original string if invalid.
+         */
+        function formatDateForDisplay(dateInput) {
+            if (!dateInput) return '';
+            let date;
+
+            // Try to parse the date string
+            // For "DD/MM/YYYY" format, directly creating a Date object might lead to incorrect parsing
+            // depending on browser locale. So, we try to parse it manually if it matches DD/MM/YYYY pattern.
+            const parts = String(dateInput).split(/[\s/-:]+/); // Split by space, slash, hyphen, colon
+
+            // Check for DD/MM/YYYY pattern (e.g., 21/07/2025)
+            if (parts.length === 3 && parts[0].length <= 2 && parts[1].length <= 2 && parts[2].length === 4) {
+                // Construct date as YYYY-MM-DD for reliable Date object creation
+                // Note: Month is 0-indexed in Date constructor, but here parts[1] is 1-indexed month.
+                // So, we use it directly as string for YYYY-MM-DD to avoid confusion with locale parsing.
+                date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            } else {
+                // For YYYY-MM-DD HH:mm:ss or other standard formats, new Date() should work
+                date = new Date(dateInput);
+            }
+
+            if (isNaN(date.getTime())) {
+                console.warn("Invalid date for formatting:", dateInput);
+                return String(dateInput); // Return original string if invalid
+            }
+
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+
+        // Function to handle tab switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            document.getElementById(`${tabId}-btn`).classList.add('active');
+            document.getElementById(`${tabId}-content`).classList.add('active');
+
+            // Load data when switching to specific tabs
+            if (tabId === 'tab1') {
+                loadDocuments('receive');
+            } else if (tabId === 'tab2') {
+                loadDocuments('send');
+            } else if (tabId === 'tab3') {
+                loadStatistics();
+            }
+        }
+
+        // --- Document Submission Functions ---
+
+        async function handleFormSubmit(event, sheetName, loadingSpinnerId) {
+            event.preventDefault();
+            toggleLoading(loadingSpinnerId, true);
+
+            const form = event.target;
+            const params = new URLSearchParams();
+            params.append('sheetName', sheetName);
+
+            // Append all form fields
+            for (const pair of new FormData(form).entries()) {
+                if (pair[0] !== 'documentFile') { // Exclude file for separate handling
+                    params.append(pair[0], pair[1]);
+                }
+            }
+
+            // Handle file upload
+            const fileInput = form.querySelector('input[type="file"]');
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+
+                reader.onloadend = async function() {
+                    const base64Data = reader.result.split(',')[1];
+                    params.append('documentFile', base64Data);
+                    params.append('documentName', file.name);
+                    params.append('documentType', file.type); // MIME type
+
+                    await sendDataToAppsScript(params, form, loadingSpinnerId, sheetName);
+                };
+                reader.onerror = function(error) {
+                    console.error('Error reading file:', error);
+                    showMessage('เกิดข้อผิดพลาดในการอ่านไฟล์', 'error');
+                    toggleLoading(loadingSpinnerId, false);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // If no file, just send the form data
+                await sendDataToAppsScript(params, form, loadingSpinnerId, sheetName);
+            }
+        }
+
+        async function sendDataToAppsScript(params, form, loadingSpinnerId, sheetName) {
+            try {
+                const response = await fetch(APP_SCRIPT_URL, {
+                    method: 'POST',
+                    body: params
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(result.message || 'บันทึกข้อมูลสำเร็จ');
+                    form.reset(); // Clear the form
+                    // Set initial date for date pickers to today after reset
+                    const today = new Date().toISOString().split('T')[0];
+                    if (form.id === 'receiveForm') {
+                        document.getElementById('receiveDate').value = today;
+                        document.getElementById('receiveDocDate').value = today;
+                    } else if (form.id === 'sendForm') { // Added for send form
+                        document.getElementById('sendDocDate').value = today;
+                    }
+                    if (sheetName === 'Receive') {
+                        loadDocuments('receive');
+                    } else if (sheetName === 'Send') {
+                        loadDocuments('send');
+                    }
+                } else {
+                    showMessage(result.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                showMessage('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์', 'error');
+            } finally {
+                toggleLoading(loadingSpinnerId, false);
+            }
+        }
+
+        // --- Document Listing and Search Functions ---
+
+        let allDocuments = []; // Store all fetched documents
+
+        async function loadDocuments(type) {
+            const documentListDivId = type === 'receive' ? 'receiveDocumentList' : 'sendDocumentList';
+            const documentListDiv = document.getElementById(documentListDivId);
+            documentListDiv.innerHTML = '<p class="text-center text-gray-500">กำลังโหลดข้อมูล...</p>';
+
+            try {
+                const response = await fetch(`${APP_SCRIPT_URL}?action=getDocuments`);
+                const result = await response.json();
+
+                if (result.success) {
+                    allDocuments = result.documents; // Store all documents
+                    filterAndDisplayDocuments(type); // Display initial filtered list
+                } else {
+                    showMessage('เกิดข้อผิดพลาดในการโหลดเอกสาร: ' + result.error, 'error');
+                    documentListDiv.innerHTML = '<p class="text-center text-red-500">ไม่สามารถโหลดข้อมูลเอกสารได้</p>';
+                }
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                showMessage('เกิดข้อผิดพลาดในการเชื่อมต่อเพื่อโหลดเอกสาร', 'error');
+                documentListDiv.innerHTML = '<p class="text-center text-red-500">ไม่สามารถเชื่อมต่อเพื่อโหลดข้อมูลได้</p>';
+            }
+        }
+
+        function filterAndDisplayDocuments(type) {
+            const searchInputId = type === 'receive' ? 'searchReceive' : 'searchSend';
+            const documentListDivId = type === 'receive' ? 'receiveDocumentList' : 'sendDocumentList';
+            const searchInput = document.getElementById(searchInputId);
+            const documentListDiv = document.getElementById(documentListDivId);
+
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredDocuments = allDocuments.filter(doc =>
+                doc.type === type &&
+                (doc.documentNumber.toLowerCase().includes(searchTerm) ||
+                 doc.subject.toLowerCase().includes(searchTerm) ||
+                 doc.department.toLowerCase().includes(searchTerm) ||
+                 doc.status.toLowerCase().includes(searchTerm) ||
+                 doc.fileName.toLowerCase().includes(searchTerm) ||
+                 formatDateForDisplay(doc.date).toLowerCase().includes(searchTerm) || // Search by formatted date
+                 (doc.receiveDate && formatDateForDisplay(doc.receiveDate).toLowerCase().includes(searchTerm)) || // Search by formatted date for receive
+                 (doc.documentDate && formatDateForDisplay(doc.documentDate).toLowerCase().includes(searchTerm))) // Search by formatted date for both receive and send
+            );
+
+            renderDocumentTable(filteredDocuments, documentListDiv, type);
+        }
+
+        function renderDocumentTable(documents, container, type) {
+            if (documents.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500">ไม่พบเอกสารที่บันทึก</p>';
+                return;
+            }
+
+            let tableHtml = `
+                <table class="min-w-full bg-white rounded-lg shadow-md overflow-hidden">
+                    <thead class="bg-red-600 text-white">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">วันที่บันทึก</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">${type === 'receive' ? 'เลขทะเบียนรับ' : 'ประเภทหนังสือ'}</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">เลขที่หนังสือ</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">เรื่อง</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">ฝ่ายที่รับผิดชอบ</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">สถานะ</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">ไฟล์</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            documents.forEach(doc => {
+                const displayDocNumber = doc.documentNumber || '';
+                const displaySubject = doc.subject || '';
+                const displayDepartment = doc.department || '';
+                const displayStatus = doc.status || '';
+                const displayFileLink = doc.fileUrl ? `<a href="${doc.fileUrl}" target="_blank" class="text-blue-500 hover:underline">${doc.fileName || 'ดูไฟล์'}</a>` : 'ไม่มีไฟล์';
+
+                tableHtml += `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-4 text-sm text-gray-800">${formatDateForDisplay(doc.date)}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">${type === 'receive' ? (doc.receiveNumber || '') : (doc.documentType || '')}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">${displayDocNumber}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">${displaySubject}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">${displayDepartment}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">
+                            <select class="ios-input ios-select text-sm p-1" data-doc-type="${doc.type}" data-doc-number="${doc.documentNumber}" onchange="updateStatus(this)">
+                                <option value="อยู่ระหว่างเสนอ" ${displayStatus === 'อยู่ระหว่างเสนอ' ? 'selected' : ''}>อยู่ระหว่างเสนอ</option>
+                                <option value="ดำเนินการแล้วเสร็จ" ${displayStatus === 'ดำเนินการแล้วเสร็จ' ? 'selected' : ''}>ดำเนินการแล้วเสร็จ</option>
+                            </select>
+                        </td>
+                        <td class="py-3 px-4 text-sm text-gray-800">${displayFileLink}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">
+                            <!-- Add more actions here if needed, e.g., edit, delete -->
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = tableHtml;
+        }
+
+        async function updateStatus(selectElement) {
+            const docType = selectElement.dataset.docType;
+            const docNumber = selectElement.dataset.docNumber;
+            const newStatus = selectElement.value;
+            // Store the current selected value before showing the modal
+            const previousStatus = selectElement.options[selectElement.selectedIndex].value;
+
+            showConfirmationModal(`ยืนยันการเปลี่ยนสถานะของเอกสาร ${docNumber} เป็น "${newStatus}"?`, async (confirmed) => {
+                if (!confirmed) {
+                    // If user cancels, revert the select box to its previous value
+                    selectElement.value = previousStatus;
+                    return;
+                }
+
+                const params = new URLSearchParams();
+                params.append('action', 'updateStatus');
+                params.append('documentType', docType);
+                params.append('documentNumber', docNumber);
+                params.append('newStatus', newStatus);
+
+                try {
+                    const response = await fetch(APP_SCRIPT_URL, {
+                        method: 'POST',
+                        body: params
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showMessage(result.message || 'อัปเดตสถานะสำเร็จ');
+                        // Refresh the relevant document list after update
+                        loadDocuments(docType);
+                    } else {
+                        showMessage(result.message || 'เกิดข้อผิดพลาดในการอัปเดตสถานะ', 'error');
+                        // If update fails, revert the select box
+                        selectElement.value = previousStatus;
+                    }
+                } catch (error) {
+                    console.error('Error updating status:', error);
+                    showMessage('เกิดข้อผิดพลาดในการเชื่อมต่อเพื่ออัปเดตสถานะ', 'error');
+                    // If connection fails, revert the select box
+                    selectElement.value = previousStatus;
+                }
+            });
+        }
+
+
+        // --- Statistics Functions ---
+
+        let statusChartInstance, departmentChartInstance, monthlyChartInstance;
+
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`${APP_SCRIPT_URL}?action=getStats`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const stats = result.stats;
+                    console.log('Fetched Statistics Data:', stats); // Log fetched data
+                    updateStatsDisplay(stats);
+                    renderCharts(stats);
+                } else {
+                    showMessage('เกิดข้อผิดพลาดในการโหลดสถิติ: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                showMessage('เกิดข้อผิดพลาดในการเชื่อมต่อเพื่อโหลดสถิติ', 'error');
+            }
+        }
+
+        function updateStatsDisplay(stats) {
+            document.getElementById('totalReceiveStats').textContent = stats.totalReceive;
+            document.getElementById('totalSendStats').textContent = stats.totalSend;
+            document.getElementById('receivePendingStats').textContent = stats.receivePending;
+            document.getElementById('receiveCompletedStats').textContent = stats.receiveCompleted;
+            document.getElementById('sendPendingStats').textContent = stats.sendPending;
+            document.getElementById('sendCompletedStats').textContent = stats.sendCompleted;
+        }
+
+        function renderCharts(stats) {
+            console.log('Rendering charts with data:', stats); // Log data before rendering
+
+            // Destroy existing chart instances if they exist
+            if (statusChartInstance) statusChartInstance.destroy();
+            if (departmentChartInstance) departmentChartInstance.destroy();
+            if (monthlyChartInstance) monthlyChartInstance.destroy();
+
+            // Chart Colors (Green-Gold White Pastel)
+            const colors = {
+                green: '#4CAF50', // A nice green
+                gold: '#FFD700',  // Gold
+                lightGreen: '#A5D6A7', // Light green
+                lightGold: '#FFECB3',  // Light gold
+                pastelBlue: '#BBDEFB', // Pastel blue
+                pastelPink: '#F8BBD0', // Pastel pink
+                white: '#FFFFFF',
+                gray: '#E0E0E0'
+            };
+
+            // Status Chart (Donut Chart)
+            const totalDocs = stats.totalReceive + stats.totalSend;
+            const completedDocs = stats.receiveCompleted + stats.sendCompleted;
+            const pendingDocs = stats.receivePending + stats.sendPending;
+            // Ensure 'otherDocs' is not negative if data is inconsistent
+            const otherDocs = Math.max(0, totalDocs - completedDocs - pendingDocs);
+
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            statusChartInstance = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ดำเนินการแล้วเสร็จ', 'อยู่ระหว่างเสนอ', 'อื่นๆ'],
+                    datasets: [{
+                        data: [completedDocs, pendingDocs, otherDocs],
+                        backgroundColor: [colors.green, colors.gold, colors.gray],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'สถานะเอกสารรวม',
+                            font: {
+                                size: 16,
+                                family: 'Inter'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Department Distribution Chart (Bar Chart)
+            const departmentLabels = Object.keys(stats.departmentData);
+            const departmentCounts = Object.values(stats.departmentData);
+            const departmentCtx = document.getElementById('departmentChart').getContext('2d');
+            departmentChartInstance = new Chart(departmentCtx, {
+                type: 'bar',
+                data: {
+                    labels: departmentLabels,
+                    datasets: [{
+                        label: 'จำนวนเอกสาร',
+                        data: departmentCounts,
+                        backgroundColor: [colors.lightGreen, colors.pastelBlue, colors.pastelPink],
+                        borderColor: [colors.green, '#64B5F6', '#F06292'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false,
+                            labels: {
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'การกระจายตามฝ่ายที่รับผิดชอบ',
+                            font: {
+                                size: 16,
+                                family: 'Inter'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Monthly Data Chart (Line Chart)
+            const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            const now = new Date();
+            const monthlyLabels = [];
+            for (let i = 0; i < 6; i++) {
+                const monthIndex = (now.getMonth() - (5 - i) + 12) % 12; // Ensure month index is positive
+                monthlyLabels.push(monthNames[monthIndex]);
+            }
+
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            monthlyChartInstance = new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [
+                        {
+                            label: 'หนังสือรับ',
+                            data: stats.monthlyData.receive,
+                            borderColor: colors.green,
+                            backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'หนังสือส่ง',
+                            data: stats.monthlyData.send,
+                            borderColor: colors.gold,
+                            backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'จำนวนหนังสือรับ-ส่งย้อนหลัง 6 เดือน',
+                            font: {
+                                size: 16,
+                                family: 'Inter'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        // --- Event Listeners and Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set initial date for date pickers to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('receiveDate').value = today;
+            document.getElementById('receiveDocDate').value = today;
+            document.getElementById('sendDocDate').value = today; // Set initial date for new field
+
+            // Tab button event listeners
+            document.getElementById('tab1-btn').addEventListener('click', () => switchTab('tab1'));
+            document.getElementById('tab2-btn').addEventListener('click', () => switchTab('tab2'));
+            document.getElementById('tab3-btn').addEventListener('click', () => switchTab('tab3'));
+
+            // Form submission event listeners
+            document.getElementById('receiveForm').addEventListener('submit', (e) => handleFormSubmit(e, 'Receive', 'receiveLoadingSpinner'));
+            document.getElementById('sendForm').addEventListener('submit', (e) => handleFormSubmit(e, 'Send', 'sendLoadingSpinner'));
+
+            // Search input event listeners
+            document.getElementById('searchReceive').addEventListener('input', () => filterAndDisplayDocuments('receive'));
+            document.getElementById('searchSend').addEventListener('input', () => filterAndDisplayDocuments('send'));
+
+            // Initial load: activate the first tab and load its content
+            switchTab('tab1');
         });
-      });
-    });
-
-    document.getElementById('receiveForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      await submitForm('receiveForm', 'fileReceive', 'receive');
-    });
-
-    document.getElementById('sendForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      await submitForm('sendForm', 'fileSend', 'send');
-    });
-
-    async function submitForm(formId, fileId, type) {
-      const form = document.getElementById(formId);
-      const loading = form.querySelector('#loading');
-      loading.style.display = 'block';
-
-      const params = new URLSearchParams();
-      const formData = new FormData(form);
-      for (let [key, value] of formData.entries()) {
-        params.append(key, value);
-      }
-
-      const fileInput = document.getElementById(fileId);
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const base64 = await toBase64(file);
-        params.append('fileName', file.name);
-        params.append('mimeType', file.type);
-        params.append('base64', base64);
-      }
-      params.append('type', type);
-
-      fetch('https://script.google.com/macros/s/AKfycbyGs5cVEgNWbAcbG5O61SKaNhe22uAlaBJVSEaXZDF33h_ngggQcomaVGL5lhMSHfF2WQ/exec', {
-        method: 'POST',
-        body: params
-      })
-      .then(res => res.json())
-      .then(json => {
-        loading.style.display = 'none';
-        alert('บันทึกสำเร็จ');
-        if (type === 'send' && json.fileUrl) {
-          const table = document.getElementById('sendTable').querySelector('tbody');
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${formData.get('regNo')}</td>
-            <td>${formData.get('subject')}</td>
-            <td><a href="${json.fileUrl}" target="_blank">ดาวน์โหลด</a></td>
-          `;
-          table.appendChild(tr);
-        }
-      })
-      .catch(err => {
-        loading.style.display = 'none';
-        alert('เกิดข้อผิดพลาด');
-        console.error(err);
-      });
-    }
-
-    function toBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    const chart = new Chart(document.getElementById('chart'), {
-      type: 'doughnut',
-      data: {
-        labels: ['หนังสือรับ', 'หนังสือส่ง'],
-        datasets: [{
-          data: [60, 40],
-          backgroundColor: ['#28a745', '#f0c674']
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          }
-        }
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>
