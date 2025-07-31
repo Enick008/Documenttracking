@@ -405,10 +405,18 @@
                 </div>
             </div>
 
+            <!-- New Section: Pending Documents by Department Table -->
+            <div class="bg-gray-50 p-4 rounded-lg shadow-inner mt-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">หนังสือที่อยู่ระหว่างดำเนินการแต่ละฝ่าย</h3>
+                <div id="pendingByDepartmentTable" class="overflow-x-auto">
+                    <p class="text-center text-gray-500">กำลังโหลดข้อมูล...</p>
+                </div>
+            </div>
+
             <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
                 <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">การกระจายตามฝ่าย</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">การกระจายหนังสือที่อยู่ระหว่างดำเนินการตามฝ่าย</h3>
                     <canvas id="departmentChart"></canvas>
                 </div>
                 <!-- Monthly Summary Table (replaces monthly chart) -->
@@ -868,6 +876,11 @@
         let departmentChartInstance; // statusChartInstance is removed
 
         async function loadStatistics() {
+            // Ensure allDocuments is loaded before calculating department-wise pending stats
+            if (allDocuments.length === 0) {
+                await loadAllDocuments(); // This will populate allDocuments and render tab4 if active
+            }
+
             try {
                 const response = await fetch(`${APP_SCRIPT_URL}?action=getStats`);
                 const result = await response.json();
@@ -877,6 +890,7 @@
                     console.log('Fetched Statistics Data:', stats); // Log fetched data
                     updateStatsDisplay(stats);
                     renderCharts(stats);
+                    renderPendingByDepartmentTable(); // Call new function to render the table
                 } else {
                     showMessage('เกิดข้อผิดพลาดในการโหลดสถิติ: ' + result.error, 'error');
                 }
@@ -948,12 +962,51 @@
             monthlySummaryTableDiv.innerHTML = tableHtml;
         }
 
+        function renderPendingByDepartmentTable() {
+            const pendingByDepartment = {};
+            allDocuments.forEach(doc => {
+                if (doc.status === 'อยู่ระหว่างเสนอ' && doc.department) {
+                    pendingByDepartment[doc.department] = (pendingByDepartment[doc.department] || 0) + 1;
+                }
+            });
+
+            const pendingDeptLabels = Object.keys(pendingByDepartment);
+
+            const pendingByDepartmentTableDiv = document.getElementById('pendingByDepartmentTable');
+            let tableHtml = `
+                <table class="min-w-full bg-white rounded-lg shadow-md overflow-hidden text-center">
+                    <thead class="bg-gray-200 text-gray-700">
+                        <tr>
+                            <th class="py-2 px-2 text-sm font-semibold">ฝ่าย</th>
+                            <th class="py-2 px-2 text-sm font-semibold">จำนวนหนังสือที่อยู่ระหว่างดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            if (pendingDeptLabels.length === 0) {
+                tableHtml += `<tr><td colspan="2" class="py-2 px-2 text-sm text-gray-800">ไม่มีหนังสือที่อยู่ระหว่างดำเนินการ</td></tr>`;
+            } else {
+                pendingDeptLabels.forEach(dept => {
+                    tableHtml += `
+                        <tr class="border-b border-gray-200">
+                            <td class="py-2 px-2 text-sm text-gray-800 font-medium">${dept}</td>
+                            <td class="py-2 px-2 text-sm text-gray-800">${pendingByDepartment[dept]}</td>
+                        </tr>
+                    `;
+                });
+            }
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+            pendingByDepartmentTableDiv.innerHTML = tableHtml;
+        }
+
 
         function renderCharts(stats) {
             console.log('Rendering charts with data:', stats); // Log data before rendering
 
             // Destroy existing chart instances if they exist
-            // statusChartInstance is removed as the canvas is removed
             if (departmentChartInstance) departmentChartInstance.destroy();
 
             // Chart Colors (Purple theme for most, specific for donut chart as per image)
@@ -977,18 +1030,26 @@
                 gray: '#E0E0E0'
             };
 
-            // Department Distribution Chart (Doughnut Chart - as per image)
-            const departmentLabels = Object.keys(stats.departmentData);
-            const departmentCounts = Object.values(stats.departmentData);
+            // Calculate pending documents by department for the chart
+            const pendingByDepartmentForChart = {};
+            allDocuments.forEach(doc => {
+                if (doc.status === 'อยู่ระหว่างเสนอ' && doc.department) {
+                    pendingByDepartmentForChart[doc.department] = (pendingByDepartmentForChart[doc.department] || 0) + 1;
+                }
+            });
+
+            const departmentLabelsForChart = Object.keys(pendingByDepartmentForChart);
+            const departmentCountsForChart = Object.values(pendingByDepartmentForChart);
+
             const departmentCtx = document.getElementById('departmentChart').getContext('2d');
             departmentChartInstance = new Chart(departmentCtx, {
                 type: 'doughnut', // Changed to doughnut
                 data: {
-                    labels: departmentLabels,
+                    labels: departmentLabelsForChart,
                     datasets: [{
-                        label: 'จำนวนเอกสาร',
-                        data: departmentCounts,
-                        backgroundColor: [colors.donutOrange, colors.donutYellow, colors.donutGrey], // Colors matching image
+                        label: 'จำนวนหนังสือที่อยู่ระหว่างดำเนินการ',
+                        data: departmentCountsForChart,
+                        backgroundColor: [colors.donutOrange, colors.donutYellow, colors.donutGrey, colors.lightPurple, colors.darkPurple], // More colors if needed
                         hoverOffset: 4
                     }]
                 },
@@ -1006,7 +1067,7 @@
                         },
                         title: {
                             display: true,
-                            text: 'การกระจายตามฝ่ายที่รับผิดชอบ',
+                            text: 'การกระจายหนังสือที่อยู่ระหว่างดำเนินการตามฝ่าย', // Updated title
                             font: {
                                 size: 16,
                                 family: 'Inter'
@@ -1051,8 +1112,10 @@
             });
             document.getElementById('searchAllDocuments').addEventListener('input', filterAndDisplayAllDocuments); // Real-time search
 
-            // Initial load: activate the first tab and load its content
-            switchTab('tab1');
+            // Initial load: Ensure allDocuments is loaded first, then activate tab1
+            loadAllDocuments().then(() => {
+                switchTab('tab1');
+            });
         });
     </script>
 </body>
