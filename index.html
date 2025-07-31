@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ทะเบียนรับส่งหนังสือกองช่างสุขาภิบาล เทศบาลนครเกาะสมุย</title>
     <!-- Tailwind CSS CDN -->
@@ -28,6 +27,7 @@
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #555;
+            border-radius: 10px;
         }
 
         /* Active tab styling */
@@ -190,6 +190,7 @@
             <button id="tab1-btn" class="tab-button active px-4 py-2 mx-1 my-1 rounded-lg text-purple-700 hover:bg-purple-50 transition-colors duration-200 text-sm sm:text-base">ลงทะเบียนหนังสือรับ</button>
             <button id="tab2-btn" class="tab-button px-4 py-2 mx-1 my-1 rounded-lg text-purple-700 hover:bg-purple-50 transition-colors duration-200 text-sm sm:text-base">ลงทะเบียนหนังสือส่ง</button>
             <button id="tab3-btn" class="tab-button px-4 py-2 mx-1 my-1 rounded-lg text-purple-700 hover:bg-purple-50 transition-colors duration-200 text-sm sm:text-base">สถิติการรับส่งหนังสือ</button>
+            <button id="tab4-btn" class="tab-button px-4 py-2 mx-1 my-1 rounded-lg text-purple-700 hover:bg-purple-50 transition-colors duration-200 text-sm sm:text-base">รายการหนังสือที่บันทึก</button>
         </div>
 
         <!-- Tab Content 1: ลงทะเบียนหนังสือรับ -->
@@ -266,17 +267,6 @@
                     </button>
                 </div>
             </form>
-
-            <hr class="my-8 border-gray-300">
-
-            <h3 class="text-xl font-semibold text-purple-700 mb-4 text-center">รายการหนังสือรับที่บันทึก</h3>
-            <div class="mb-4">
-                <input type="text" id="searchReceive" placeholder="ค้นหาเอกสารรับ..." class="ios-input">
-            </div>
-            <div id="receiveDocumentList" class="overflow-x-auto">
-                <!-- Documents will be loaded here -->
-                <p class="text-center text-gray-500">กำลังโหลดข้อมูล...</p>
-            </div>
         </div>
 
         <!-- Tab Content 2: ลงทะเบียนหนังสือส่ง -->
@@ -355,17 +345,6 @@
                     </button>
                 </div>
             </form>
-
-            <hr class="my-8 border-gray-300">
-
-            <h3 class="text-xl font-semibold text-purple-700 mb-4 text-center">รายการหนังสือส่งที่บันทึก</h3>
-            <div class="mb-4">
-                <input type="text" id="searchSend" placeholder="ค้นหาเอกสารส่ง..." class="ios-input">
-            </div>
-            <div id="sendDocumentList" class="overflow-x-auto">
-                <!-- Documents will be loaded here -->
-                <p class="text-center text-gray-500">กำลังโหลดข้อมูล...</p>
-            </div>
         </div>
 
         <!-- Tab Content 3: สถิติการรับส่งหนังสือ -->
@@ -440,6 +419,56 @@
                         <p class="text-center text-gray-500">กำลังโหลดข้อมูล...</p>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Tab Content 4: รายการหนังสือที่บันทึก -->
+        <div id="tab4-content" class="tab-content bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl sm:text-2xl font-semibold text-purple-700 mb-6 text-center">รายการเอกสารทั้งหมด</h2>
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg shadow-inner">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">ตัวกรองและค้นหา</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label for="filterDocType" class="block text-gray-700 text-sm font-medium mb-2">ประเภทเอกสาร</label>
+                        <select id="filterDocType" class="ios-input ios-select">
+                            <option value="">ทั้งหมด</option>
+                            <option value="receive">หนังสือรับ</option>
+                            <option value="send">หนังสือส่ง</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="filterDepartment" class="block text-gray-700 text-sm font-medium mb-2">ฝ่ายที่รับผิดชอบ</label>
+                        <select id="filterDepartment" class="ios-input ios-select">
+                            <option value="">ทั้งหมด</option>
+                            <option value="งานบริหาร">งานบริหาร</option>
+                            <option value="ฝ่ายปรับปรุงคุณภาพน้ำ">ฝ่ายปรับปรุงคุณภาพน้ำ</option>
+                            <option value="ฝ่ายจัดการสิ่งแวดล้อมด้านวัสดุใช้แล้ว">ฝ่ายจัดการสิ่งแวดล้อมด้านวัสดุใช้แล้ว</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="filterStatus" class="block text-gray-700 text-sm font-medium mb-2">สถานะ</label>
+                        <select id="filterStatus" class="ios-input ios-select">
+                            <option value="">ทั้งหมด</option>
+                            <option value="อยู่ระหว่างเสนอ">อยู่ระหว่างเสนอ</option>
+                            <option value="ดำเนินการแล้วเสร็จ">ดำเนินการแล้วเสร็จ</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="searchAllDocuments" class="block text-gray-700 text-sm font-medium mb-2">ค้นหา</label>
+                    <input type="text" id="searchAllDocuments" placeholder="ค้นหาเรื่อง, เลขที่หนังสือ, หรือหน่วยงาน..." class="ios-input">
+                </div>
+                <div class="flex justify-center space-x-4">
+                    <button id="applyFiltersBtn" class="ios-button px-6 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition-colors font-medium">
+                        ค้นหา
+                    </button>
+                    <button id="clearFiltersBtn" class="ios-button px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                        ล้างตัวกรอง
+                    </button>
+                </div>
+            </div>
+            <div id="allDocumentList" class="overflow-x-auto">
+                <p class="text-center text-gray-500">กำลังโหลดข้อมูล...</p>
             </div>
         </div>
     </main>
@@ -562,11 +591,13 @@
 
             // Load data when switching to specific tabs
             if (tabId === 'tab1') {
-                loadDocuments('receive');
+                // No specific document loading needed here, as the combined list handles it
             } else if (tabId === 'tab2') {
-                loadDocuments('send');
+                // No specific document loading needed here, as the combined list handles it
             } else if (tabId === 'tab3') {
                 loadStatistics();
+            } else if (tabId === 'tab4') { // New tab for combined documents
+                loadAllDocuments();
             }
         }
 
@@ -599,7 +630,7 @@
                     params.append('documentName', file.name);
                     params.append('documentType', file.type); // MIME type
 
-                    await sendDataToAppsScript(params, form, loadingSpinnerId, sheetName);
+                    await sendDataToAppsScript(params, form, loadingSpinnerId);
                 };
                 reader.onerror = function(error) {
                     console.error('Error reading file:', error);
@@ -609,11 +640,11 @@
                 reader.readAsDataURL(file);
             } else {
                 // If no file, just send the form data
-                await sendDataToAppsScript(params, form, loadingSpinnerId, sheetName);
+                await sendDataToAppsScript(params, form, loadingSpinnerId);
             }
         }
 
-        async function sendDataToAppsScript(params, form, loadingSpinnerId, sheetName) {
+        async function sendDataToAppsScript(params, form, loadingSpinnerId) {
             try {
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
@@ -629,14 +660,10 @@
                     if (form.id === 'receiveForm') {
                         document.getElementById('receiveDate').value = today;
                         document.getElementById('receiveDocDate').value = today;
-                    } else if (form.id === 'sendForm') { // Added for send form
+                    } else if (form.id === 'sendForm') {
                         document.getElementById('sendDocDate').value = today;
                     }
-                    if (sheetName === 'Receive') {
-                        loadDocuments('receive');
-                    } else if (sheetName === 'Send') {
-                        loadDocuments('send');
-                    }
+                    loadAllDocuments(); // Always refresh the combined list after submission
                 } else {
                     showMessage(result.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
                 }
@@ -648,13 +675,12 @@
             }
         }
 
-        // --- Document Listing and Search Functions ---
+        // --- Document Listing and Search Functions (Combined) ---
 
         let allDocuments = []; // Store all fetched documents
 
-        async function loadDocuments(type) {
-            const documentListDivId = type === 'receive' ? 'receiveDocumentList' : 'sendDocumentList';
-            const documentListDiv = document.getElementById(documentListDivId);
+        async function loadAllDocuments() {
+            const documentListDiv = document.getElementById('allDocumentList');
             documentListDiv.innerHTML = '<p class="text-center text-gray-500">กำลังโหลดข้อมูล...</p>';
 
             try {
@@ -663,7 +689,7 @@
 
                 if (result.success) {
                     allDocuments = result.documents; // Store all documents
-                    filterAndDisplayDocuments(type); // Display initial filtered list
+                    filterAndDisplayAllDocuments(); // Display initial filtered list
                 } else {
                     showMessage('เกิดข้อผิดพลาดในการโหลดเอกสาร: ' + result.error, 'error');
                     documentListDiv.innerHTML = '<p class="text-center text-red-500">ไม่สามารถโหลดข้อมูลเอกสารได้</p>';
@@ -675,29 +701,58 @@
             }
         }
 
-        function filterAndDisplayDocuments(type) {
-            const searchInputId = type === 'receive' ? 'searchReceive' : 'searchSend';
-            const documentListDivId = type === 'receive' ? 'receiveDocumentList' : 'sendDocumentList';
-            const searchInput = document.getElementById(searchInputId);
-            const documentListDiv = document.getElementById(documentListDivId);
+        function filterAndDisplayAllDocuments() {
+            const searchInput = document.getElementById('searchAllDocuments');
+            const filterDocType = document.getElementById('filterDocType');
+            const filterDepartment = document.getElementById('filterDepartment');
+            const filterStatus = document.getElementById('filterStatus');
 
-            const searchTerm = searchInput.value.toLowerCase();
-            const filteredDocuments = allDocuments.filter(doc =>
-                doc.type === type &&
-                (doc.documentNumber.toLowerCase().includes(searchTerm) ||
-                 doc.subject.toLowerCase().includes(searchTerm) ||
-                 doc.department.toLowerCase().includes(searchTerm) ||
-                 doc.status.toLowerCase().includes(searchTerm) ||
-                 doc.fileName.toLowerCase().includes(searchTerm) ||
-                 formatDateForDisplay(doc.date).toLowerCase().includes(searchTerm) || // Search by formatted date
-                 (doc.receiveDate && formatDateForDisplay(doc.receiveDate).toLowerCase().includes(searchTerm)) || // Search by formatted date for receive
-                 (doc.documentDate && formatDateForDisplay(doc.documentDate).toLowerCase().includes(searchTerm))) // Search by formatted date for both receive and send
-            );
+            const searchTerm = String(searchInput.value || '').toLowerCase();
+            const selectedDocType = String(filterDocType.value || '').toLowerCase();
+            const selectedDepartment = String(filterDepartment.value || '').toLowerCase();
+            const selectedStatus = String(filterStatus.value || '').toLowerCase();
 
-            renderDocumentTable(filteredDocuments, documentListDiv, type);
+            const filteredDocuments = allDocuments.filter(doc => {
+                // Safely convert to string before calling toLowerCase()
+                const docNumber = String(doc.documentNumber || '').toLowerCase();
+                const subject = String(doc.subject || '').toLowerCase();
+                const department = String(doc.department || '').toLowerCase();
+                const status = String(doc.status || '').toLowerCase();
+                const fileName = String(doc.fileName || '').toLowerCase();
+                const receiveNumber = String(doc.receiveNumber || '').toLowerCase();
+                const documentType = String(doc.documentType || '').toLowerCase(); // This is for 'send' type
+                const date = formatDateForDisplay(doc.date).toLowerCase();
+                const receiveDate = formatDateForDisplay(doc.receiveDate || '').toLowerCase();
+                const docDate = formatDateForDisplay(doc.documentDate || '').toLowerCase();
+                const fromOrg = String(doc.fromOrg || '').toLowerCase();
+                const toOrg = String(doc.toOrg || '').toLowerCase();
+
+
+                const matchesSearchTerm =
+                    docNumber.includes(searchTerm) ||
+                    subject.includes(searchTerm) ||
+                    department.includes(searchTerm) ||
+                    status.includes(searchTerm) ||
+                    fileName.includes(searchTerm) ||
+                    receiveNumber.includes(searchTerm) ||
+                    documentType.includes(searchTerm) ||
+                    date.includes(searchTerm) ||
+                    receiveDate.includes(searchTerm) ||
+                    docDate.includes(searchTerm) ||
+                    fromOrg.includes(searchTerm) ||
+                    toOrg.includes(searchTerm);
+
+                const matchesDocType = selectedDocType === '' || doc.type.toLowerCase() === selectedDocType;
+                const matchesDepartment = selectedDepartment === '' || department.includes(selectedDepartment);
+                const matchesStatus = selectedStatus === '' || status.includes(selectedStatus);
+
+                return matchesSearchTerm && matchesDocType && matchesDepartment && matchesStatus;
+            });
+
+            renderCombinedDocumentTable(filteredDocuments, document.getElementById('allDocumentList'));
         }
 
-        function renderDocumentTable(documents, container, type) {
+        function renderCombinedDocumentTable(documents, container) {
             if (documents.length === 0) {
                 container.innerHTML = '<p class="text-center text-gray-500">ไม่พบเอกสารที่บันทึก</p>';
                 return;
@@ -708,7 +763,8 @@
                     <thead class="bg-purple-700 text-white">
                         <tr>
                             <th class="py-3 px-4 text-left text-sm font-semibold">วันที่บันทึก</th>
-                            <th class="py-3 px-4 text-left text-sm font-semibold">${type === 'receive' ? 'เลขทะเบียนรับ' : 'ประเภทหนังสือ'}</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">ประเภท</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">เลขทะเบียน/ประเภทหนังสือ</th>
                             <th class="py-3 px-4 text-left text-sm font-semibold">เลขที่หนังสือ</th>
                             <th class="py-3 px-4 text-left text-sm font-semibold">เรื่อง</th>
                             <th class="py-3 px-4 text-left text-sm font-semibold">ฝ่ายที่รับผิดชอบ</th>
@@ -721,6 +777,8 @@
             `;
 
             documents.forEach(doc => {
+                const displayDocNumberOrType = doc.type === 'receive' ? (doc.receiveNumber || '') : (doc.documentType || '');
+                const displayDocType = doc.type === 'receive' ? 'รับ' : 'ส่ง';
                 const displayDocNumber = doc.documentNumber || '';
                 const displaySubject = doc.subject || '';
                 const displayDepartment = doc.department || '';
@@ -730,7 +788,8 @@
                 tableHtml += `
                     <tr class="border-b border-gray-200 hover:bg-gray-50">
                         <td class="py-3 px-4 text-sm text-gray-800">${formatDateForDisplay(doc.date)}</td>
-                        <td class="py-3 px-4 text-sm text-gray-800">${type === 'receive' ? (doc.receiveNumber || '') : (doc.documentType || '')}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">${displayDocType}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">${displayDocNumberOrType}</td>
                         <td class="py-3 px-4 text-sm text-gray-800">${displayDocNumber}</td>
                         <td class="py-3 px-4 text-sm text-gray-800">${displaySubject}</td>
                         <td class="py-3 px-4 text-sm text-gray-800">${displayDepartment}</td>
@@ -751,6 +810,9 @@
             tableHtml += `
                     </tbody>
                 </table>
+                <div class="text-right text-gray-600 text-sm mt-4">
+                    พบ ${documents.length} เอกสาร
+                </div>
             `;
             container.innerHTML = tableHtml;
         }
@@ -762,7 +824,7 @@
             // Store the current selected value before showing the modal
             const previousStatus = selectElement.options[selectElement.selectedIndex].value;
 
-            showConfirmationModal(`ยืนยันการเปลี่ยนสถานะของเอกสาร ${docNumber} เป็น "${newStatus}"?`, async (confirmed) => {
+            showConfirmationModal(`ยืนยันการเปลี่ยนสถานะของเอกสาร ${docNumber} (ประเภท ${docType === 'receive' ? 'รับ' : 'ส่ง'}) เป็น "${newStatus}"?`, async (confirmed) => {
                 if (!confirmed) {
                     // If user cancels, revert the select box to its previous value
                     selectElement.value = previousStatus;
@@ -784,8 +846,8 @@
 
                     if (result.success) {
                         showMessage(result.message || 'อัปเดตสถานะสำเร็จ');
-                        // Refresh the relevant document list after update
-                        loadDocuments(docType);
+                        // Refresh the combined document list after update
+                        loadAllDocuments();
                     } else {
                         showMessage(result.message || 'เกิดข้อผิดพลาดในการอัปเดตสถานะ', 'error');
                         // If update fails, revert the select box
@@ -972,14 +1034,22 @@
             document.getElementById('tab1-btn').addEventListener('click', () => switchTab('tab1'));
             document.getElementById('tab2-btn').addEventListener('click', () => switchTab('tab2'));
             document.getElementById('tab3-btn').addEventListener('click', () => switchTab('tab3'));
+            document.getElementById('tab4-btn').addEventListener('click', () => switchTab('tab4')); // New tab listener
 
             // Form submission event listeners
             document.getElementById('receiveForm').addEventListener('submit', (e) => handleFormSubmit(e, 'Receive', 'receiveLoadingSpinner'));
             document.getElementById('sendForm').addEventListener('submit', (e) => handleFormSubmit(e, 'Send', 'sendLoadingSpinner'));
 
-            // Search input event listeners
-            document.getElementById('searchReceive').addEventListener('input', () => filterAndDisplayDocuments('receive'));
-            document.getElementById('searchSend').addEventListener('input', () => filterAndDisplayDocuments('send'));
+            // Filter and Search event listeners for Tab 4
+            document.getElementById('applyFiltersBtn').addEventListener('click', filterAndDisplayAllDocuments);
+            document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+                document.getElementById('filterDocType').value = '';
+                document.getElementById('filterDepartment').value = '';
+                document.getElementById('filterStatus').value = '';
+                document.getElementById('searchAllDocuments').value = '';
+                filterAndDisplayAllDocuments(); // Apply cleared filters
+            });
+            document.getElementById('searchAllDocuments').addEventListener('input', filterAndDisplayAllDocuments); // Real-time search
 
             // Initial load: activate the first tab and load its content
             switchTab('tab1');
