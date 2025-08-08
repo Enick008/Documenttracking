@@ -489,19 +489,20 @@
     </footer>
 
     <script>
+        // URL ของ Google Apps Script ที่คุณ Deploy เอง
         const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGs5cVEgNWbAcbG5O61SKaNhe22uAlaBJVSEaXZDF33h_ngggQcomaVGL5lhMSHfF2WQ/exec';
 
-        // Helper function to show messages
+        // Helper function: แสดงข้อความแจ้งเตือน (สำเร็จ/ข้อผิดพลาด)
         function showMessage(message, type = 'success') {
             const messageBox = document.getElementById('messageBox');
             messageBox.textContent = message;
             messageBox.className = `message-box show ${type}`;
             setTimeout(() => {
                 messageBox.classList.remove('show');
-            }, 3000); // Hide after 3 seconds
+            }, 3000); // ซ่อนหลังจาก 3 วินาที
         }
 
-        // Helper function to show/hide loading spinner
+        // Helper function: แสดง/ซ่อน loading spinner
         function toggleLoading(spinnerId, show) {
             const spinner = document.getElementById(spinnerId);
             if (spinner) {
@@ -617,6 +618,8 @@
 
             const form = event.target;
             const params = new URLSearchParams();
+            // *** MODIFIED: Explicitly add action parameter for Apps Script ***
+            params.append('action', 'addDocument');
             params.append('sheetName', sheetName);
 
             // Append all form fields
@@ -634,9 +637,10 @@
 
                 reader.onloadend = async function() {
                     const base64Data = reader.result.split(',')[1];
-                    params.append('documentFile', base64Data);
-                    params.append('documentName', file.name);
-                    params.append('documentType', file.type); // MIME type
+                    // *** MODIFIED: Use correct parameter names for Apps Script ***
+                    params.append('documentFileBase64', base64Data);
+                    params.append('documentFileName', file.name);
+                    params.append('documentFileMimeType', file.type); // MIME type
 
                     await sendDataToAppsScript(params, form, loadingSpinnerId);
                 };
@@ -660,7 +664,8 @@
                 });
                 const result = await response.json();
 
-                if (result.success) {
+                // *** MODIFIED: Check result.status === 'success' and use result.message ***
+                if (result.status === 'success') {
                     showMessage(result.message || 'บันทึกข้อมูลสำเร็จ');
                     form.reset(); // Clear the form
                     // Set initial date for date pickers to today after reset
@@ -673,7 +678,7 @@
                     }
                     loadAllDocuments(); // Always refresh the combined list after submission
                 } else {
-                    showMessage(result.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+                    showMessage(result.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
                 }
             } catch (error) {
                 console.error('Error submitting form:', error);
@@ -692,14 +697,16 @@
             documentListDiv.innerHTML = '<p class="text-center text-gray-500">กำลังโหลดข้อมูล...</p>';
 
             try {
-                const response = await fetch(`${APP_SCRIPT_URL}?action=getDocuments`);
+                // *** MODIFIED: Changed action to 'getAllDocuments' to match Apps Script ***
+                const response = await fetch(`${APP_SCRIPT_URL}?action=getAllDocuments`);
                 const result = await response.json();
 
-                if (result.success) {
+                // *** MODIFIED: Check result.status === 'success' and use result.message ***
+                if (result.status === 'success') {
                     allDocuments = result.documents; // Store all documents
                     filterAndDisplayAllDocuments(); // Display initial filtered list
                 } else {
-                    showMessage('เกิดข้อผิดพลาดในการโหลดเอกสาร: ' + result.error, 'error');
+                    showMessage('เกิดข้อผิดพลาดในการโหลดเอกสาร: ' + result.message, 'error');
                     documentListDiv.innerHTML = '<p class="text-center text-red-500">ไม่สามารถโหลดข้อมูลเอกสารได้</p>';
                 }
             } catch (error) {
@@ -726,7 +733,8 @@
                 const subject = String(doc.subject || '').toLowerCase();
                 const department = String(doc.department || '').toLowerCase();
                 const status = String(doc.status || '').toLowerCase();
-                const fileName = String(doc.fileName || '').toLowerCase();
+                // *** MODIFIED: Use documentFileName to match Apps Script response ***
+                const documentFileName = String(doc.documentFileName || '').toLowerCase();
                 const receiveNumber = String(doc.receiveNumber || '').toLowerCase();
                 const documentType = String(doc.documentType || '').toLowerCase(); // This is for 'send' type
                 const date = formatDateForDisplay(doc.date).toLowerCase();
@@ -741,7 +749,8 @@
                     subject.includes(searchTerm) ||
                     department.includes(searchTerm) ||
                     status.includes(searchTerm) ||
-                    fileName.includes(searchTerm) ||
+                    // *** MODIFIED: Use documentFileName in search ***
+                    documentFileName.includes(searchTerm) ||
                     receiveNumber.includes(searchTerm) ||
                     documentType.includes(searchTerm) ||
                     date.includes(searchTerm) ||
@@ -791,7 +800,8 @@
                 const displaySubject = doc.subject || '';
                 const displayDepartment = doc.department || '';
                 const displayStatus = doc.status || '';
-                const displayFileLink = doc.fileUrl ? `<a href="${doc.fileUrl}" target="_blank" class="text-blue-500 hover:underline">${doc.fileName || 'ดูไฟล์'}</a>` : 'ไม่มีไฟล์';
+                // *** MODIFIED: Use doc.documentUrl and doc.documentFileName to match Apps Script response ***
+                const displayFileLink = doc.documentUrl ? `<a href="${doc.documentUrl}" target="_blank" class="text-blue-500 hover:underline">${doc.documentFileName || 'ดูไฟล์'}</a>` : 'ไม่มีไฟล์';
 
                 tableHtml += `
                     <tr class="border-b border-gray-200 hover:bg-gray-50">
@@ -810,6 +820,7 @@
                         <td class="py-3 px-4 text-sm text-gray-800">${displayFileLink}</td>
                         <td class="py-3 px-4 text-sm text-gray-800">
                             <!-- Add more actions here if needed, e.g., edit, delete -->
+                            <button class="text-red-600 hover:text-red-900" onclick="deleteDocument('${doc.id}', '${doc.type}')">ลบ</button>
                         </td>
                     </tr>
                 `;
@@ -852,7 +863,8 @@
                     });
                     const result = await response.json();
 
-                    if (result.success) {
+                    // *** MODIFIED: Check result.status === 'success' and use result.message ***
+                    if (result.status === 'success') {
                         showMessage(result.message || 'อัปเดตสถานะสำเร็จ');
                         // Refresh the combined document list after update
                         loadAllDocuments();
@@ -867,6 +879,18 @@
                     // If connection fails, revert the select box
                     selectElement.value = previousStatus;
                 }
+            });
+        }
+
+        // *** ADDED: Placeholder for deleteDocument function (needs Apps Script implementation) ***
+        function deleteDocument(docId, docType) {
+            showConfirmationModal(`คุณต้องการลบเอกสารนี้หรือไม่? (ID: ${docId}, ประเภท: ${docType})`, async (confirmed) => {
+                if (!confirmed) {
+                    return;
+                }
+                showMessage('ฟังก์ชันลบยังไม่ถูกใช้งานใน Apps Script.', 'error');
+                // TODO: Implement actual deletion in Apps Script and call it here.
+                // After successful deletion, call loadAllDocuments();
             });
         }
 
@@ -885,14 +909,15 @@
                 const response = await fetch(`${APP_SCRIPT_URL}?action=getStats`);
                 const result = await response.json();
 
-                if (result.success) {
+                // *** MODIFIED: Check result.status === 'success' and use result.message ***
+                if (result.status === 'success') {
                     const stats = result.stats;
                     console.log('Fetched Statistics Data:', stats); // Log fetched data
                     updateStatsDisplay(stats);
                     renderCharts(stats);
                     renderPendingByDepartmentTable(); // Call new function to render the table
                 } else {
-                    showMessage('เกิดข้อผิดพลาดในการโหลดสถิติ: ' + result.error, 'error');
+                    showMessage('เกิดข้อผิดพลาดในการโหลดสถิติ: ' + result.message, 'error');
                 }
             } catch (error) {
                 console.error('Error loading statistics:', error);
